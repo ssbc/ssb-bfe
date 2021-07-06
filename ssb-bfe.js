@@ -55,7 +55,7 @@ const BOX2TYPE = Buffer.concat([
   Buffer.from([1])
 ])
 
-exports.encode = {
+let encoder = {
   feed(feed) {
     let feedtype
     if (feed.endsWith('.ed25519'))
@@ -113,36 +113,6 @@ exports.encode = {
       Buffer.from(sig.substring(0, sig.length-'.sig.ed25519'.length), 'base64')
     ])
   },
-  convert(value) {
-    if (Array.isArray(value)) {
-      return value.map(x => exports.encode.convert(x))
-    } else if (value === undefined || value === null) {
-      return NULLTYPE
-    } else if (!Buffer.isBuffer(value) && typeof value === 'object' && value !== null) {
-      const converted = {}
-      for (var k in value)
-        converted[k] = exports.encode.convert(value[k])
-      return converted
-    } else if (typeof value === 'string') {
-      if (value.startsWith('@'))
-        return exports.encode.feed(value)
-      else if (value.startsWith('%'))
-        return exports.encode.message(value)
-      else if (value.endsWith('.sig.ed25519'))
-        return exports.encode.signature(value)
-      else if (value.endsWith('.box2') || value.endsWith('.box'))
-        return exports.encode.box(value)
-      else
-        return exports.encode.string(value)
-    } else if (typeof value == "boolean") {
-      return exports.encode.boolean(value)
-    } else {
-      if (!Number.isInteger(value) && !Buffer.isBuffer(value))
-        console.log("not encoding unknown value", value)
-      // FIXME: more checks, including floats!
-      return value
-    }
-  },
   string(str) {
     return Buffer.concat([
       STRINGTYPE,
@@ -157,7 +127,40 @@ exports.encode = {
   }
 }
 
-exports.decode = {
+exports.encode = function encode(value) {
+  if (Array.isArray(value)) {
+    return value.map(x => exports.encode(x))
+  } else if (value === undefined || value === null) {
+    return NULLTYPE
+  } else if (!Buffer.isBuffer(value) && typeof value === 'object' && value !== null) {
+    const converted = {}
+    for (var k in value)
+      converted[k] = exports.encode(value[k])
+    return converted
+  } else if (typeof value === 'string') {
+    if (value.startsWith('@'))
+      return encoder.feed(value)
+    else if (value.startsWith('%'))
+      return encoder.message(value)
+    else if (value.endsWith('.sig.ed25519'))
+      return encoder.signature(value)
+    else if (value.endsWith('.box2') || value.endsWith('.box'))
+      return encoder.box(value)
+    else
+      return encoder.string(value)
+  } else if (typeof value == "boolean") {
+    return encoder.boolean(value)
+  } else {
+    if (!Number.isInteger(value) && !Buffer.isBuffer(value))
+      console.log("not encoding unknown value", value)
+    // FIXME: more checks, including floats!
+    return value
+  }
+}
+
+// decode
+
+let decoder = {
   box(benc) {
     if (benc.slice(0, 2).equals(BOX1TYPE))
       return benc.slice(2).toString('base64') + '.box1'
@@ -194,39 +197,40 @@ exports.decode = {
   signature(benc) {
     return benc.slice(2).toString('base64') + '.sig.ed25519'
   },
-  convert(value) {
-    if (Array.isArray(value)) {
-      return value.map(x => exports.decode.convert(x))
-    } else if (Buffer.isBuffer(value)) {
-      if (value.length < 2) throw new Error("Buffer length < 2, " + value)
-      if (value.slice(0, 2).equals(STRINGTYPE))
-        return exports.decode.string(value)
-      else if (value.slice(0, 2).equals(BOOLTYPE))
-        return exports.decode.boolean(value)
-      else if (value.slice(0, 2).equals(NULLTYPE))
-        return null
-      else if (value.slice(0, 1).equals(FEEDTYPE))
-        return exports.decode.feed(value)
-      else if (value.slice(0, 1).equals(MSGTYPE))
-        return exports.decode.message(value)
-      else if (value.slice(0, 1).equals(BOXTYPE))
-        return exports.decode.box(value)
-      else if (value.slice(0, 2).equals(SIGNATURETYPE))
-        return exports.decode.signature(value)
-      else
-        return value.toString('base64')
-    } else if (typeof value === 'object' && value !== null) {
-      const converted = {}
-      for (var k in value)
-        converted[k] = exports.decode.convert(value[k])
-      return converted
-    } else // FIXME: more checks, including floats!
-      return value
-  },
   string(benc) {
     return benc.slice(2).toString()
   },
   boolean(benc) {
     return benc.slice(2).equals(BOOLTRUE)
   }
+}
+
+exports.decode = function decode(value) {
+  if (Array.isArray(value)) {
+    return value.map(x => exports.decode(x))
+  } else if (Buffer.isBuffer(value)) {
+    if (value.length < 2) throw new Error("Buffer length < 2, " + value)
+    if (value.slice(0, 2).equals(STRINGTYPE))
+      return decoder.string(value)
+    else if (value.slice(0, 2).equals(BOOLTYPE))
+      return decoder.boolean(value)
+    else if (value.slice(0, 2).equals(NULLTYPE))
+      return null
+    else if (value.slice(0, 1).equals(FEEDTYPE))
+      return decoder.feed(value)
+    else if (value.slice(0, 1).equals(MSGTYPE))
+      return decoder.message(value)
+    else if (value.slice(0, 1).equals(BOXTYPE))
+      return decoder.box(value)
+    else if (value.slice(0, 2).equals(SIGNATURETYPE))
+      return decoder.signature(value)
+    else
+      return value.toString('base64')
+  } else if (typeof value === 'object' && value !== null) {
+    const converted = {}
+    for (var k in value)
+      converted[k] = exports.decode(value[k])
+    return converted
+  } else // FIXME: more checks, including floats!
+    return value
 }
