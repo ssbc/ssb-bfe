@@ -5,6 +5,7 @@ tape('encode/decode basic types', function (t) {
   let values = [
     true,
     false,
+    null,
     'this is a string',
     {
       'a': 1,
@@ -14,11 +15,13 @@ tape('encode/decode basic types', function (t) {
   ]
 
   const encoded = bfe.encode.convert(values)
-  for (var i = 0; i < 3; ++i)
-    t.equal(Buffer.isBuffer(encoded[i]), true, 'buffer')
-  t.equal(encoded[3]['a'], 1, 'numbers not encoded')
-  t.equal(Buffer.isBuffer(encoded[3]['b']), true, 'object string values encoded')
-  t.equal(encoded[4], 100, 'numbers not encoded')
+  t.equal(Buffer.isBuffer(encoded[0]), true, 'true')
+  t.equal(Buffer.isBuffer(encoded[1]), true, 'false')
+  t.equal(Buffer.isBuffer(encoded[2]), true, 'null')
+  t.equal(Buffer.isBuffer(encoded[3]), true, 'string')
+  t.equal(encoded[4]['a'], 1, 'numbers in object not encoded')
+  t.equal(Buffer.isBuffer(encoded[4]['b']), true, 'object string values encoded')
+  t.equal(encoded[5], 100, 'numbers not encoded')
   const decoded = bfe.decode.convert(encoded)
   t.deepEqual(decoded, values, 'properly decoded')
   t.end()
