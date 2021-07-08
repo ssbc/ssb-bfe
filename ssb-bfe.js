@@ -39,6 +39,7 @@ const BBMSGTYPE = Buffer.concat([
   Buffer.from([1]),
   Buffer.from([4])
 ])
+const nullMessage = Buffer.alloc(32)
 
 const SIGNATURETYPE = Buffer.concat([
   Buffer.from([4]),
@@ -181,7 +182,8 @@ let decoder = {
     return '@' + benc.slice(2).toString('base64') + feedextension
   },
   message(benc) {
-    if (benc.length == 2) return null
+    if (benc.length == 2 || benc.slice(2).compare(nullMessage, 0, 32))
+      return null
 
     let msgextension = ''
     if (benc.slice(0, 2).equals(CLASSICMSGTYPE))
