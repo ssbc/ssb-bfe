@@ -7,7 +7,7 @@ const BOOLTYPE = Buffer.concat([
   Buffer.from([1])
 ])
 const BOOLTRUE = Buffer.from([1])
-const NULLTYPE = Buffer.concat([
+const UNDEFINEDTYPE = Buffer.concat([
   Buffer.from([6]),
   Buffer.from([2])
 ])
@@ -16,10 +16,6 @@ const FEEDTYPE = Buffer.from([0])
 const CLASSICFEEDTYPE = Buffer.concat([
   Buffer.from([0]),
   Buffer.from([0])
-])
-const GGFEEDTYPE = Buffer.concat([
-  Buffer.from([0]),
-  Buffer.from([1])
 ])
 const BBFEEDTYPE = Buffer.concat([
   Buffer.from([0]),
@@ -31,15 +27,11 @@ const CLASSICMSGTYPE = Buffer.concat([
   Buffer.from([1]),
   Buffer.from([0])
 ])
-const GGMSGTYPE = Buffer.concat([
-  Buffer.from([1]),
-  Buffer.from([1])
-])
 const BBMSGTYPE = Buffer.concat([
   Buffer.from([1]),
   Buffer.from([4])
 ])
-const nullMessage = Buffer.alloc(32)
+const nullMsgBytes = Buffer.alloc(32)
 
 const SIGNATURETYPE = Buffer.concat([
   Buffer.from([4]),
@@ -63,8 +55,6 @@ let encoder = {
       feedtype = CLASSICFEEDTYPE
     else if (feed.endsWith('.bbfeed-v1'))
       feedtype = BBFEEDTYPE
-    else if (feed.endsWith('.ggfeed-v1'))
-      feedtype = GGFEEDTYPE
     else throw new Error("Unknown feed format: " + feed)
 
     const dotIndex = feed.lastIndexOf('.')
@@ -74,26 +64,33 @@ let encoder = {
       Buffer.from(feed.substring(1, dotIndex), 'base64')
     ])
   },
+  emptyMessage(feedformat) {
+    let msgtype
+    if (feedformat === 'classic')
+      msgtype = CLASSICMSGTYPE
+    else if (feedformat === 'bendybutt')
+      msgtype = BBMSGTYPE
+    else throw new Error("Unknown msg: " + msg)
+
+    return Buffer.concat([
+      msgtype,
+      nullMsgBytes
+    ])
+  },
   message(msg) {
-    if (msg === null) {
-      return MSGTYPE
-    } else {
-      let msgtype
-      if (msg.endsWith('.sha256'))
-        msgtype = CLASSICMSGTYPE
-      else if (msg.endsWith('.bbmsg-v1'))
-        msgtype = BBMSGTYPE
-      else if (msg.endsWith('.ggmsg-v1'))
-        msgtype = GGMSGTYPE
-      else throw new Error("Unknown msg: " + msg)
+    let msgtype
+    if (msg.endsWith('.sha256'))
+      msgtype = CLASSICMSGTYPE
+    else if (msg.endsWith('.bbmsg-v1'))
+      msgtype = BBMSGTYPE
+    else throw new Error("Unknown msg: " + msg)
 
-      const dotIndex = msg.lastIndexOf('.')
+    const dotIndex = msg.lastIndexOf('.')
 
-      return Buffer.concat([
-        msgtype,
-        Buffer.from(msg.substring(1, dotIndex), 'base64')
-      ])
-    }
+    return Buffer.concat([
+      msgtype,
+      Buffer.from(msg.substring(1, dotIndex), 'base64')
+    ])
   },
   box(value) {
     if (value.endsWith(".box"))
@@ -128,15 +125,25 @@ let encoder = {
   }
 }
 
-exports.encode = function encode(value) {
+exports.encodeBendyButt = function encodeBendyButt(value) {
+  return exports.encode('bendybutt', value)
+}
+
+exports.encodeClassic = function encodeClassic(value) {
+  return exports.encode('classic', value)
+}
+
+exports.encode = function encode(feedformat, value) {
   if (Array.isArray(value)) {
-    return value.map(x => exports.encode(x))
-  } else if (value === undefined || value === null) {
-    return NULLTYPE
+    return value.map(x => exports.encode(feedformat, x))
+  } else if (value === undefined) {
+    return UNDEFINEDTYPE
+  } else if (value === null) {
+    return encoder.emptyMessage(feedformat)
   } else if (!Buffer.isBuffer(value) && typeof value === 'object' && value !== null) {
     const converted = {}
     for (var k in value)
-      converted[k] = exports.encode(value[k])
+      converted[k] = exports.encode(feedformat, value[k])
     return converted
   } else if (typeof value === 'string') {
     if (value.startsWith('@'))
@@ -182,7 +189,7 @@ let decoder = {
     return '@' + benc.slice(2).toString('base64') + feedextension
   },
   message(benc) {
-    if (benc.length == 2 || benc.slice(2).compare(nullMessage, 0, 32))
+    if (benc.slice(2).compare(nullMsgBytes, 0, 32) === 0)
       return null
 
     let msgextension = ''
@@ -216,8 +223,8 @@ exports.decode = function decode(value) {
       return decoder.string(value)
     else if (value.slice(0, 2).equals(BOOLTYPE))
       return decoder.boolean(value)
-    else if (value.slice(0, 2).equals(NULLTYPE))
-      return null
+    else if (value.slice(0, 2).equals(UNDEFINEDTYPE))
+      return undefined
     else if (value.slice(0, 1).equals(FEEDTYPE))
       return decoder.feed(value)
     else if (value.slice(0, 1).equals(MSGTYPE))
