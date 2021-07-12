@@ -17,6 +17,10 @@ const CLASSICFEEDTYPE = Buffer.concat([
   Buffer.from([0]),
   Buffer.from([0])
 ])
+const GGFEEDTYPE = Buffer.concat([
+  Buffer.from([0]),
+  Buffer.from([1])
+])
 const BBFEEDTYPE = Buffer.concat([
   Buffer.from([0]),
   Buffer.from([3])
@@ -26,6 +30,10 @@ const MSGTYPE = Buffer.from([1])
 const CLASSICMSGTYPE = Buffer.concat([
   Buffer.from([1]),
   Buffer.from([0])
+])
+const GGMSGTYPE = Buffer.concat([
+  Buffer.from([1]),
+  Buffer.from([1])
 ])
 const BBMSGTYPE = Buffer.concat([
   Buffer.from([1]),
@@ -55,6 +63,8 @@ let encoder = {
       feedtype = CLASSICFEEDTYPE
     else if (feed.endsWith('.bbfeed-v1'))
       feedtype = BBFEEDTYPE
+    else if (feed.endsWith('.ggfeed-v1'))
+      feedtype = GGFEEDTYPE
     else throw new Error("Unknown feed format: " + feed)
 
     const dotIndex = feed.lastIndexOf('.')
@@ -83,6 +93,8 @@ let encoder = {
       msgtype = CLASSICMSGTYPE
     else if (msg.endsWith('.bbmsg-v1'))
       msgtype = BBMSGTYPE
+    else if (msg.endsWith('.ggmsg-v1'))
+      msgtype = GGMSGTYPE
     else throw new Error("Unknown msg: " + msg)
 
     const dotIndex = msg.lastIndexOf('.')
