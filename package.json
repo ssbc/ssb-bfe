@@ -7,9 +7,7 @@
     "type": "git",
     "url": "git://github.com/ssb-ngi-pointer/ssb-bfe.git"
   },
-  "main": "ssb-bfe.js",
-  "dependencies": {
-  },
+  "main": "index.js",
   "devDependencies": {
     "tap-bail": "^1.0.0",
     "tap-spec": "^5.0.0",
