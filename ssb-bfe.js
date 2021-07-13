@@ -1,60 +1,24 @@
-const STRINGTYPE = Buffer.concat([
-  Buffer.from([6]),
-  Buffer.from([0])
-])
-const BOOLTYPE = Buffer.concat([
-  Buffer.from([6]),
-  Buffer.from([1])
-])
+const STRINGTYPE = Buffer.from([6, 0])
+const BOOLTYPE = Buffer.from([6, 1])
 const BOOLTRUE = Buffer.from([1])
-const UNDEFINEDTYPE = Buffer.concat([
-  Buffer.from([6]),
-  Buffer.from([2])
-])
+const UNDEFINEDTYPE = Buffer.from([6, 2])
 
 const FEEDTYPE = Buffer.from([0])
-const CLASSICFEEDTYPE = Buffer.concat([
-  Buffer.from([0]),
-  Buffer.from([0])
-])
-const GGFEEDTYPE = Buffer.concat([
-  Buffer.from([0]),
-  Buffer.from([1])
-])
-const BBFEEDTYPE = Buffer.concat([
-  Buffer.from([0]),
-  Buffer.from([3])
-])
+const CLASSICFEEDTYPE = Buffer.from([0, 0])
+const GGFEEDTYPE = Buffer.from([0, 1])
+const BBFEEDTYPE = Buffer.from([0, 3])
 
 const MSGTYPE = Buffer.from([1])
-const CLASSICMSGTYPE = Buffer.concat([
-  Buffer.from([1]),
-  Buffer.from([0])
-])
-const GGMSGTYPE = Buffer.concat([
-  Buffer.from([1]),
-  Buffer.from([1])
-])
-const BBMSGTYPE = Buffer.concat([
-  Buffer.from([1]),
-  Buffer.from([4])
-])
+const CLASSICMSGTYPE = Buffer.from([1, 0])
+const GGMSGTYPE = Buffer.from([1, 1])
+const BBMSGTYPE = Buffer.from([1, 4])
 const nullMsgBytes = Buffer.alloc(32)
 
-const SIGNATURETYPE = Buffer.concat([
-  Buffer.from([4]),
-  Buffer.from([0])
-])
+const SIGNATURETYPE = Buffer.from([4, 0])
 
 const BOXTYPE = Buffer.from([5])
-const BOX1TYPE = Buffer.concat([
-  Buffer.from([5]),
-  Buffer.from([0])
-])
-const BOX2TYPE = Buffer.concat([
-  Buffer.from([5]),
-  Buffer.from([1])
-])
+const BOX1TYPE = Buffer.from([5, 0])
+const BOX2TYPE = Buffer.from([5, 1])
 
 let encoder = {
   feed(feed) {
