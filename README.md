@@ -20,20 +20,17 @@ the **nil** marker
 
 ## API
 
-### encodeBendyButt(value)
+### encode(input)
 
-Takes a bendy butt value and returns the encoded counterpart. If value
-is an array or object only the values are encoded. Similarly numbers
-are not encoded.
+Takes any JavaScript primitive and returns its encoded counterpart. Is applied
+recursively in case the input is an object or an array. All inputs are converted
+to [TFD] Buffers, except for objects, arrays, and numbers, which remain the
+same.
 
-### encodeClassic(value)
+### decode(input)
 
-Takes a classic value and returns the encoded counterpart. This is
-mostly used for encoding feed and messages.
+Takes an encoded value (such as the output from `encode`) and returns the
+decoded counterparts as JavaScript primitives.
 
-### decode(value)
-
-Takes an encoded value and returns the decoded counterpart.
-
-
-[SSB binary field encodings]: https://github.com/ssb-ngi-pointer/ssb-binary-field-encodings-spec
+[ssb binary field encodings]: https://github.com/ssb-ngi-pointer/ssb-binary-field-encodings-spec
+[TFD]: https://github.com/ssbc/envelope-spec/blob/master/encoding/tfk.md
