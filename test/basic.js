@@ -10,8 +10,10 @@ tape('encode/decode basic types', function (t) {
     {
       a: 1,
       b: 'string',
+      c: 0,
     },
     100,
+    0,
   ]
 
   const encoded = bfe.encode('classic', values)
@@ -25,7 +27,9 @@ tape('encode/decode basic types', function (t) {
     '0600',
     'object string values encoded'
   )
+  t.equal(encoded[4]['c'], 0, 'falsy numbers as an object field')
   t.equal(encoded[5], 100, 'numbers not encoded')
+  t.equal(encoded[6], 0, 'falsy number as an array item')
   const decoded = bfe.decode(encoded)
   t.deepEqual(decoded, values, 'properly decoded')
 

@@ -86,20 +86,20 @@ const encoder = {
 
 function encode(feedformat, value) {
   if (Array.isArray(value)) {
-    return value.map((x) => encode(feedformat, x) || NULL_TYPE)
+    return value.map((x) => {
+      const y = encode(feedformat, x)
+      if (y === undefined) return NULL_TYPE
+      else return y
+    })
   } else if (value === undefined) {
     return undefined
   } else if (value === null) {
     return NULL_TYPE
-  } else if (
-    !Buffer.isBuffer(value) &&
-    typeof value === 'object' &&
-    value !== null
-  ) {
+  } else if (!Buffer.isBuffer(value) && typeof value === 'object') {
     const converted = {}
     for (var k in value) {
-      const encoded = encode(feedformat, value[k])
-      if (encoded) converted[k] = encoded
+      const y = encode(feedformat, value[k])
+      if (y !== undefined) converted[k] = y
     }
     return converted
   } else if (typeof value === 'string') {
