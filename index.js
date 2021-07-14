@@ -1,7 +1,7 @@
 const STRING_TYPE = Buffer.from([6, 0])
 const BOOL_TYPE = Buffer.from([6, 1])
 const BOOL_TRUE = Buffer.from([1])
-const UNDEFINED_TYPE = Buffer.from([6, 2])
+const NULL_TYPE = Buffer.from([6, 2])
 
 const FEED_TYPE = Buffer.from([0])
 const CLASSIC_FEED_TYPE = Buffer.from([0, 0])
@@ -12,7 +12,6 @@ const MSG_TYPE = Buffer.from([1])
 const CLASSIC_MSG_TYPE = Buffer.from([1, 0])
 const GG_MSG_TYPE = Buffer.from([1, 1])
 const BB_MSG_TYPE = Buffer.from([1, 4])
-const nullMsgBytes = Buffer.alloc(32)
 
 const SIGNATURE_TYPE = Buffer.from([4, 0])
 
@@ -34,14 +33,6 @@ const encoder = {
       feedtype,
       Buffer.from(feed.substring(1, dotIndex), 'base64'),
     ])
-  },
-  emptyMessage(feedformat) {
-    let msgtype
-    if (feedformat === 'classic') msgtype = CLASSIC_MSG_TYPE
-    else if (feedformat === 'bendybutt') msgtype = BB_MSG_TYPE
-    else throw new Error('Unknown msg: ' + msg)
-
-    return Buffer.concat([msgtype, nullMsgBytes])
   },
   message(msg) {
     let msgtype
@@ -95,11 +86,11 @@ const encoder = {
 
 function encode(feedformat, value) {
   if (Array.isArray(value)) {
-    return value.map((x) => encode(feedformat, x))
+    return value.map((x) => encode(feedformat, x) || NULL_TYPE)
   } else if (value === undefined) {
-    return UNDEFINED_TYPE
+    return undefined
   } else if (value === null) {
-    return encoder.emptyMessage(feedformat)
+    return NULL_TYPE
   } else if (
     !Buffer.isBuffer(value) &&
     typeof value === 'object' &&
@@ -107,7 +98,8 @@ function encode(feedformat, value) {
   ) {
     const converted = {}
     for (var k in value) {
-      converted[k] = encode(feedformat, value[k])
+      const encoded = encode(feedformat, value[k])
+      if (encoded) converted[k] = encoded
     }
     return converted
   } else if (typeof value === 'string') {
@@ -155,8 +147,6 @@ const decoder = {
     return '@' + benc.slice(2).toString('base64') + feedextension
   },
   message(benc) {
-    if (benc.slice(2).compare(nullMsgBytes, 0, 32) === 0) return null
-
     let msgextension = ''
     if (benc.slice(0, 2).equals(CLASSIC_MSG_TYPE)) msgextension = '.sha256'
     else if (benc.slice(0, 2).equals(BB_MSG_TYPE)) msgextension = '.bbmsg-v1'
@@ -183,7 +173,7 @@ function decode(value) {
     if (value.length < 2) throw new Error('Buffer length < 2, ' + value)
     if (value.slice(0, 2).equals(STRING_TYPE)) return decoder.string(value)
     else if (value.slice(0, 2).equals(BOOL_TYPE)) return decoder.boolean(value)
-    else if (value.slice(0, 2).equals(UNDEFINED_TYPE)) return undefined
+    else if (value.slice(0, 2).equals(NULL_TYPE)) return null
     else if (value.slice(0, 1).equals(FEED_TYPE)) return decoder.feed(value)
     else if (value.slice(0, 1).equals(MSG_TYPE)) return decoder.message(value)
     else if (value.slice(0, 1).equals(BOX_TYPE)) return decoder.box(value)
