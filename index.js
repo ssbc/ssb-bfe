@@ -186,7 +186,7 @@ const decoder = {
   box(buf) {
     const tf = buf.slice(0, 2)
     const d = buf.slice(2)
-    if (tf.equals(BOX1_TF)) return d.toString('base64') + '.box1'
+    if (tf.equals(BOX1_TF)) return d.toString('base64') + '.box'
     else if (tf.equals(BOX2_TF)) return d.toString('base64') + '.box2'
     else throw new Error('Unknown box: ' + buf)
   },
