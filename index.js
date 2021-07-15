@@ -2,22 +2,18 @@
 // file uses "T" to mean "Type byte", "TF" to mean "Type byte and Format byte"
 // and "D" to mean "Data bytes".
 
-const STRING_TF = Buffer.from([6, 0])
-const BOOL_TF = Buffer.from([6, 1])
-const BOOL_TRUE = Buffer.from([1])
-const BOOL_FALSE = Buffer.from([0])
-const NIL_TF = Buffer.from([6, 2])
-const NIL_TFD = NIL_TF
-
 const FEED_T = Buffer.from([0])
 const CLASSIC_FEED_TF = Buffer.from([0, 0])
-const GG_FEED_TF = Buffer.from([0, 1])
-const BB_FEED_TF = Buffer.from([0, 3])
+const GABBYGR_FEED_TF = Buffer.from([0, 1])
+const BENDYBT_FEED_TF = Buffer.from([0, 3])
 
 const MSG_T = Buffer.from([1])
 const CLASSIC_MSG_TF = Buffer.from([1, 0])
-const GG_MSG_TF = Buffer.from([1, 1])
-const BB_MSG_TF = Buffer.from([1, 4])
+const GABBYGR_MSG_TF = Buffer.from([1, 1])
+const BENDYBT_MSG_TF = Buffer.from([1, 4])
+
+const BLOB_T = Buffer.from([2])
+const CLASSIC_BLOB_TF = Buffer.from([2, 0])
 
 const SIGNATURE_TF = Buffer.from([4, 0])
 
@@ -25,12 +21,19 @@ const BOX_T = Buffer.from([5])
 const BOX1_TF = Buffer.from([5, 0])
 const BOX2_TF = Buffer.from([5, 1])
 
+const STRING_TF = Buffer.from([6, 0])
+const BOOL_TF = Buffer.from([6, 1])
+const BOOL_TRUE = Buffer.from([1])
+const BOOL_FALSE = Buffer.from([0])
+const NIL_TF = Buffer.from([6, 2])
+const NIL_TFD = NIL_TF
+
 const encoder = {
   feed(feedId) {
     let tf
     if (feedId.endsWith('.ed25519')) tf = CLASSIC_FEED_TF
-    else if (feedId.endsWith('.bbfeed-v1')) tf = BB_FEED_TF
-    else if (feedId.endsWith('.ggfeed-v1')) tf = GG_FEED_TF
+    else if (feedId.endsWith('.ggfeed-v1')) tf = GABBYGR_FEED_TF
+    else if (feedId.endsWith('.bbfeed-v1')) tf = BENDYBT_FEED_TF
     else throw new Error('Unknown feed format: ' + feedId)
 
     const dotIndex = feedId.lastIndexOf('.')
@@ -43,12 +46,24 @@ const encoder = {
   message(msgId) {
     let tf
     if (msgId.endsWith('.sha256')) tf = CLASSIC_MSG_TF
-    else if (msgId.endsWith('.bbmsg-v1')) tf = BB_MSG_TF
-    else if (msgId.endsWith('.ggmsg-v1')) tf = GG_MSG_TF
+    else if (msgId.endsWith('.ggmsg-v1')) tf = GABBYGR_MSG_TF
+    else if (msgId.endsWith('.bbmsg-v1')) tf = BENDYBT_MSG_TF
     else throw new Error('Unknown msg ID: ' + msgId)
 
     const dotIndex = msgId.lastIndexOf('.')
     const b64part = msgId.substring(1, dotIndex)
+    const d = Buffer.from(b64part, 'base64')
+
+    return Buffer.concat([tf, d])
+  },
+
+  blob(blobId) {
+    let tf
+    if (blobId.endsWith('.sha256')) tf = CLASSIC_BLOB_TF
+    else throw new Error('Unknown blob ID: ' + blobId)
+
+    const dotIndex = blobId.lastIndexOf('.')
+    const b64part = blobId.substring(1, dotIndex)
     const d = Buffer.from(b64part, 'base64')
 
     return Buffer.concat([tf, d])
@@ -106,6 +121,7 @@ function encode(input) {
   } else if (typeof input === 'string') {
     if (input.startsWith('@')) return encoder.feed(input)
     else if (input.startsWith('%')) return encoder.message(input)
+    else if (input.startsWith('&')) return encoder.blob(input)
     else if (input.endsWith('.sig.ed25519')) return encoder.signature(input)
     else if (input.endsWith('.box2') || input.endsWith('.box'))
       return encoder.box(input)
@@ -121,46 +137,58 @@ function encode(input) {
 }
 
 const decoder = {
-  box(buf) {
-    const tf = buf.slice(0, 2)
-    const d = buf.slice(2)
-    if (tf.equals(BOX1_TF)) return d.toString('base64') + '.box1'
-    else if (tf.equals(BOX2_TF)) return d.toString('base64') + '.box2'
-    else throw new Error('Unknown box: ' + buf)
-  },
-
   feed(buf) {
     const tf = buf.slice(0, 2)
     const d = buf.slice(2)
 
-    let feedextension = ''
-    if (tf.equals(CLASSIC_FEED_TF)) feedextension = '.ed25519'
-    else if (tf.equals(BB_FEED_TF)) feedextension = '.bbfeed-v1'
-    else if (tf.equals(GG_FEED_TF)) feedextension = '.ggfeed-v1'
+    let feedExtension
+    if (tf.equals(CLASSIC_FEED_TF)) feedExtension = '.ed25519'
+    else if (tf.equals(GABBYGR_FEED_TF)) feedExtension = '.ggfeed-v1'
+    else if (tf.equals(BENDYBT_FEED_TF)) feedExtension = '.bbfeed-v1'
     else throw new Error('Unknown feed: ' + buf)
 
     const b64part = d.toString('base64')
-    return '@' + b64part + feedextension
+    return '@' + b64part + feedExtension
   },
 
   message(buf) {
     const tf = buf.slice(0, 2)
     const d = buf.slice(2)
 
-    let msgextension = ''
-    if (tf.equals(CLASSIC_MSG_TF)) msgextension = '.sha256'
-    else if (tf.equals(BB_MSG_TF)) msgextension = '.bbmsg-v1'
-    else if (tf.equals(GG_MSG_TF)) msgextension = '.ggmsg-v1'
+    let msgExtension
+    if (tf.equals(CLASSIC_MSG_TF)) msgExtension = '.sha256'
+    else if (tf.equals(GABBYGR_MSG_TF)) msgExtension = '.ggmsg-v1'
+    else if (tf.equals(BENDYBT_MSG_TF)) msgExtension = '.bbmsg-v1'
     else throw new Error('Unknown msg: ' + buf)
 
     const b64part = d.toString('base64')
-    return '%' + b64part + msgextension
+    return '%' + b64part + msgExtension
+  },
+
+  blob(buf) {
+    const tf = buf.slice(0, 2)
+    const d = buf.slice(2)
+
+    let blobExtension
+    if (tf.equals(CLASSIC_BLOB_TF)) blobExtension = '.sha256'
+    else throw new Error('Unknown blob ID: ' + buf)
+
+    const b64part = d.toString('base64')
+    return '&' + b64part + blobExtension
   },
 
   signature(buf) {
     const d = buf.slice(2)
     const b64part = d.toString('base64')
     return b64part + '.sig.ed25519'
+  },
+
+  box(buf) {
+    const tf = buf.slice(0, 2)
+    const d = buf.slice(2)
+    if (tf.equals(BOX1_TF)) return d.toString('base64') + '.box1'
+    else if (tf.equals(BOX2_TF)) return d.toString('base64') + '.box2'
+    else throw new Error('Unknown box: ' + buf)
   },
 
   string(buf) {
@@ -189,6 +217,7 @@ function decode(input) {
     else if (tf.equals(NIL_TF)) return null
     else if (t.equals(FEED_T)) return decoder.feed(input)
     else if (t.equals(MSG_T)) return decoder.message(input)
+    else if (t.equals(BLOB_T)) return decoder.blob(input)
     else if (t.equals(BOX_T)) return decoder.box(input)
     else if (tf.equals(SIGNATURE_TF)) return decoder.signature(input)
     else return input.toString('base64')
