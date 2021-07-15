@@ -59,7 +59,7 @@ const encoder = {
 
   blob(blobId) {
     let tf
-    if (blobId.endsWith('sha256')) tf = CLASSIC_BLOB_TF
+    if (blobId.endsWith('.sha256')) tf = CLASSIC_BLOB_TF
     else throw new Error('Unknown blob ID: ' + blobId)
 
     const dotIndex = blobId.lastIndexOf('.')
@@ -141,40 +141,40 @@ const decoder = {
     const tf = buf.slice(0, 2)
     const d = buf.slice(2)
 
-    let feedextension
-    if (tf.equals(CLASSIC_FEED_TF)) feedextension = '.ed25519'
-    else if (tf.equals(GABBYGR_FEED_TF)) feedextension = '.ggfeed-v1'
-    else if (tf.equals(BENDYBT_FEED_TF)) feedextension = '.bbfeed-v1'
+    let feedExtension
+    if (tf.equals(CLASSIC_FEED_TF)) feedExtension = '.ed25519'
+    else if (tf.equals(GABBYGR_FEED_TF)) feedExtension = '.ggfeed-v1'
+    else if (tf.equals(BENDYBT_FEED_TF)) feedExtension = '.bbfeed-v1'
     else throw new Error('Unknown feed: ' + buf)
 
     const b64part = d.toString('base64')
-    return '@' + b64part + feedextension
+    return '@' + b64part + feedExtension
   },
 
   message(buf) {
     const tf = buf.slice(0, 2)
     const d = buf.slice(2)
 
-    let msgextension
-    if (tf.equals(CLASSIC_MSG_TF)) msgextension = '.sha256'
-    else if (tf.equals(GABBYGR_MSG_TF)) msgextension = '.ggmsg-v1'
-    else if (tf.equals(BENDYBT_MSG_TF)) msgextension = '.bbmsg-v1'
+    let msgExtension
+    if (tf.equals(CLASSIC_MSG_TF)) msgExtension = '.sha256'
+    else if (tf.equals(GABBYGR_MSG_TF)) msgExtension = '.ggmsg-v1'
+    else if (tf.equals(BENDYBT_MSG_TF)) msgExtension = '.bbmsg-v1'
     else throw new Error('Unknown msg: ' + buf)
 
     const b64part = d.toString('base64')
-    return '%' + b64part + msgextension
+    return '%' + b64part + msgExtension
   },
 
   blob(buf) {
     const tf = buf.slice(0, 2)
     const d = buf.slice(2)
 
-    let blobext
-    if (tf.equals(CLASSIC_BLOB_TF)) blobext = '.sha256'
+    let blobExtension
+    if (tf.equals(CLASSIC_BLOB_TF)) blobExtension = '.sha256'
     else throw new Error('Unknown blob ID: ' + buf)
 
     const b64part = d.toString('base64')
-    return '&' + b64part + blobext
+    return '&' + b64part + blobExtension
   },
 
   signature(buf) {
