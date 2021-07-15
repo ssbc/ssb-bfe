@@ -16,7 +16,7 @@ tape('encode/decode basic types', function (t) {
     0,
   ]
 
-  const encoded = bfe.encode('classic', values)
+  const encoded = bfe.encode(values)
   t.equal(encoded[0].toString('hex'), '060101', 'true')
   t.equal(encoded[1].toString('hex'), '060100', 'false')
   t.equal(encoded[2].toString('hex'), '0602', 'null')
@@ -38,7 +38,7 @@ tape('encode/decode basic types', function (t) {
 
 tape('undefined in an object disappears when encoded', function (t) {
   const obj = { a: 'alice', b: undefined, c: 'carla' }
-  const encoded = bfe.encode('classic', obj)
+  const encoded = bfe.encode(obj)
   t.deepEquals(Object.keys(encoded), ['a', 'c'], 'key "b" is not found')
   t.equal(encoded.a.slice(0, 2).toString('hex'), '0600', '"a" is a string')
   t.notok(encoded.b, 'field "b" is not found')
@@ -48,7 +48,7 @@ tape('undefined in an object disappears when encoded', function (t) {
 
 tape('undefined in an array is converted to null when encoded', function (t) {
   const arr = ['alice', undefined, 'carla']
-  const encoded = bfe.encode('classic', arr)
+  const encoded = bfe.encode(arr)
   t.equals(encoded.length, 3, 'length remains the same')
   t.equals(encoded[0].slice(0, 2).toString('hex'), '0600', '1st is a string')
   t.equals(encoded[1].slice(0, 2).toString('hex'), '0602', '2nd is null')
@@ -65,7 +65,7 @@ tape('encode/decode box types', function (t) {
     'oIogDumL0H7+2TzipPTqZXmwx+04i9aE2mCDOb+hE0Pe+b0pGW0BUdVafzHdiGuDq7/r6Bi8wcNXhYoB4bSMlhNrdK7FJ40VoqXITcEHFwiQTxrkFxhD35oh2+J2J73jxxSXRzvn1fFgu+E7t22WfMkyfh3VpZSYniuh297KzwQBPDA5pjBMskp4pnuMk0ZYcxaGUrP33Q==.box2',
   ]
 
-  const encoded = bfe.encode('classic', values)
+  const encoded = bfe.encode(values)
   t.equal(Buffer.isBuffer(encoded[0]), true, 'box1 encoded correctly')
   t.equal(Buffer.isBuffer(encoded[1]), true, 'box2 encoded correctly')
   const decoded = bfe.decode(encoded)
@@ -81,7 +81,7 @@ tape('encode/decode bendy butt', function (t) {
     'az18LEvCgji1zqpAF/JcTool+y69WhyLVesvWcrnyj5pFJymXKALZ7zUDRuxOcBGr+wU4v6zN/+b3tAYsz+zBg==.sig.ed25519',
   ]
 
-  const encoded = bfe.encodeBendyButt(values)
+  const encoded = bfe.encode(values)
   t.equal(encoded[0].slice(0, 2).toString('hex'), '0003', 'bendy feed')
   t.equal(encoded[1].slice(0, 2).toString('hex'), '0104', 'bendy msg')
   t.equal(encoded[2].toString('hex'), '0602', 'null')
@@ -98,7 +98,7 @@ tape('encode/decode classic', function (t) {
     'az18LEvCgji1zqpAF/JcTool+y69WhyLVesvWcrnyj5pFJymXKALZ7zUDRuxOcBGr+wU4v6zN/+b3tAYsz+zBg==.sig.ed25519',
   ]
 
-  const encoded = bfe.encodeClassic(values)
+  const encoded = bfe.encode(values)
   t.equal(encoded[0].slice(0, 2).toString('hex'), '0000', 'classic feed')
   t.equal(encoded[1].slice(0, 2).toString('hex'), '0100', 'classic msg')
   t.equal(encoded[2].toString('hex'), '0602', 'null')
