@@ -7,6 +7,7 @@ const BOOL_TF = Buffer.from([6, 1])
 const BOOL_TRUE = Buffer.from([1])
 const BOOL_FALSE = Buffer.from([0])
 const NIL_TF = Buffer.from([6, 2])
+const NIL_TFD = NIL_TF
 
 const FEED_T = Buffer.from([0])
 const CLASSIC_FEED_TF = Buffer.from([0, 0])
@@ -86,14 +87,14 @@ function encode(input) {
   if (Array.isArray(input)) {
     return input.map((x) => {
       const y = encode(x)
-      if (y === undefined) return NIL_TF
+      if (y === undefined) return NIL_TFD
       else return y
     })
   }
   if (input === undefined) {
     return undefined
   } else if (input === null) {
-    return NIL_TF
+    return NIL_TFD
   } else if (typeof input === 'object' && !Buffer.isBuffer(input)) {
     const output = {}
     for (let key in input) {
