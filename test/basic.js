@@ -61,11 +61,13 @@ tape('undefined in an array is converted to null when encoded', function (t) {
 
 tape('encode/decode box types', function (t) {
   let values = [
-    'oIogDumL0H7+2TzipPTqZXmwx+04i9aE2mCDOb+hE0Pe+b0pGW0BUdVafzHdiGuDq7/r6Bi8wcNXhYoB4bSMlhNrdK7FJ40VoqXITcEHFwiQTxrkFxhD35oh2+J2J73jxxSXRzvn1fFgu+E7t22WfMkyfh3VpZSYniuh297KzwQBPDA5pjBMskp4pnuMk0ZYcxaGUrP33Q==.box1',
+    'oIogDumL0H7+2TzipPTqZXmwx+04i9aE2mCDOb+hE0Pe+b0pGW0BUdVafzHdiGuDq7/r6Bi8wcNXhYoB4bSMlhNrdK7FJ40VoqXITcEHFwiQTxrkFxhD35oh2+J2J73jxxSXRzvn1fFgu+E7t22WfMkyfh3VpZSYniuh297KzwQBPDA5pjBMskp4pnuMk0ZYcxaGUrP33Q==.box',
     'oIogDumL0H7+2TzipPTqZXmwx+04i9aE2mCDOb+hE0Pe+b0pGW0BUdVafzHdiGuDq7/r6Bi8wcNXhYoB4bSMlhNrdK7FJ40VoqXITcEHFwiQTxrkFxhD35oh2+J2J73jxxSXRzvn1fFgu+E7t22WfMkyfh3VpZSYniuh297KzwQBPDA5pjBMskp4pnuMk0ZYcxaGUrP33Q==.box2',
   ]
 
   const encoded = bfe.encode(values)
+  t.equal(encoded[0].slice(0, 2).toString('hex'), '0500', 'detected box1')
+  t.equal(encoded[1].slice(0, 2).toString('hex'), '0501', 'detected box2')
   t.equal(Buffer.isBuffer(encoded[0]), true, 'box1 encoded correctly')
   t.equal(Buffer.isBuffer(encoded[1]), true, 'box2 encoded correctly')
   const decoded = bfe.decode(encoded)
