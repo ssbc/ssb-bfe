@@ -2,11 +2,21 @@
 
 Javascript implementation of the [SSB binary field encodings] spec.
 
-For encoding, the *null* message value can be ambiguous as it depends
-on the feed format we encode for. Secondly the specification allows an
-empty value to be encoded as a value type. Javascript has two ways to
-express the lack of a value: null and undefined. For value types we
-will use undefined.
+The spec only has one type of **nil**, but JavaScript has two: `null` and
+`undefined`. ssb-bfe will treat these two values in a way that mirrors what
+JSON.stringify does:
+
+- BFE Encoding an **object** with a `null` field becomes an object with the
+**nil** marker
+  - Similar to `JSON.stringify({a: null}) === '{"a": null}'`
+- BFE Encoding an **array** with a `null` element becomes an array with the
+**nil** marker
+  - Similar to `JSON.stringify([null]) === '[null]'`
+- BFE Encoding an **object** with a `undefined` field will **omit** that field
+  - Similar to `JSON.stringify({a: undefined}) === '{}'`
+- BFE Encoding an **array** with an `undefined` element becomes an array with
+the **nil** marker
+  - Similar to `JSON.stringify([undefined]) === '[null]'`
 
 ## API
 
