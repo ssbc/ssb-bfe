@@ -94,6 +94,7 @@ tape('encode/decode classic', function (t) {
   let values = [
     '@6CAxOI3f+LUOVrbAl0IemqiS7ATpQvr9Mdw9LC4+Uv0=.ed25519',
     '%HZVnEzm0NgoSVfG0Hx4gMFbMMHhFvhJsG2zK/pijYII=.sha256',
+    '&S7+CwHM6dZ9si5Vn4ftpk/l/ldbRMqzzJos+spZbWf4=.sha256',
     null,
     'az18LEvCgji1zqpAF/JcTool+y69WhyLVesvWcrnyj5pFJymXKALZ7zUDRuxOcBGr+wU4v6zN/+b3tAYsz+zBg==.sig.ed25519',
   ]
@@ -101,8 +102,9 @@ tape('encode/decode classic', function (t) {
   const encoded = bfe.encode(values)
   t.equal(encoded[0].slice(0, 2).toString('hex'), '0000', 'classic feed')
   t.equal(encoded[1].slice(0, 2).toString('hex'), '0100', 'classic msg')
-  t.equal(encoded[2].toString('hex'), '0602', 'null')
-  t.equal(Buffer.isBuffer(encoded[3]), true, 'classic signature')
+  t.equal(encoded[2].slice(0, 2).toString('hex'), '0200', 'classic blob')
+  t.equal(encoded[3].toString('hex'), '0602', 'null')
+  t.equal(Buffer.isBuffer(encoded[4]), true, 'classic signature')
   const decoded = bfe.decode(encoded)
   t.deepEqual(decoded, values, 'properly decoded')
   t.end()
