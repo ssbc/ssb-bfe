@@ -220,7 +220,7 @@ function decode(input) {
     else if (t.equals(BLOB_T)) return decoder.blob(input)
     else if (t.equals(BOX_T)) return decoder.box(input)
     else if (tf.equals(SIGNATURE_TF)) return decoder.signature(input)
-    else return input.toString('base64')
+    else return input
   } else if (typeof input === 'object' && input !== null) {
     const output = {}
     for (let key in input) {
