@@ -13,6 +13,7 @@ tape('encode/decode basic types', function (t) {
       c: 0,
     },
     100,
+    Buffer.from([3, 2, 1]),
     0,
   ]
 
@@ -29,7 +30,8 @@ tape('encode/decode basic types', function (t) {
   )
   t.equal(encoded[4]['c'], 0, 'falsy numbers as an object field')
   t.equal(encoded[5], 100, 'numbers not encoded')
-  t.equal(encoded[6], 0, 'falsy number as an array item')
+  t.equal(encoded[6].toString('hex'), '030201', 'buffer untouched')
+  t.equal(encoded[7], 0, 'falsy number as an array item')
   const decoded = bfe.decode(encoded)
   t.deepEqual(decoded, values, 'properly decoded')
 
