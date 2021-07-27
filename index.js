@@ -233,7 +233,21 @@ function decode(input) {
   else return input
 }
 
+function convertNilForEnvelopeSpec(msgTFD, feedTFD) {
+  if (msgTFD.equals(NIL_TFD)) {
+    const feedTF = feedTFD.slice(0, 2)
+    if (feedTF.equals(BENDYBT_FEED_TF))
+      return Buffer.concat([BENDYBT_MSG_TF, Buffer.alloc(32)])
+    else if (feedTF.equals(GABBYGR_FEED_TF))
+      return Buffer.concat([GABBYGR_MSG_TF, Buffer.alloc(32)])
+    else
+      return Buffer.concat([CLASSIC_MSG_TF, Buffer.alloc(32)])
+  } else
+    return msgTFD
+}
+
 module.exports = {
   encode,
   decode,
+  convertNilForEnvelopeSpec
 }
