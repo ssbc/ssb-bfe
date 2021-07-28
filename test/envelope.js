@@ -13,5 +13,11 @@ tape('nil envelope', function (t) {
   t.equal(classicNull.slice(0,2).toString('hex'), '0100', 'classic msg')
   t.ok(classicNull.slice(2).equals(Buffer.alloc(32)), 'ends with 32 zeros')
   t.equal(classicNull.length, 32 + 2, 'length ok')
+
+  const msg = '%HZVnEzm0NgoSVfG0Hx4gMFbMMHhFvhJsG2zK/pijYII=.sha256'
+  const classicMsg = bfe.convertNilForEnvelopeSpec(bfe.encode(msg), bfe.encode(classicFeed))
+  t.equal(classicMsg.slice(0,2).toString('hex'), '0100', 'classic msg')
+  t.notOk(classicMsg.slice(2).equals(Buffer.alloc(32)), 'is not null')
+  t.equal(bfe.decode(classicMsg), msg, 'decodes back to the same')
   t.end()
 })
