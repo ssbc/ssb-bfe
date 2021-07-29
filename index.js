@@ -2,30 +2,38 @@
 // file uses "T" to mean "Type byte", "TF" to mean "Type byte and Format byte"
 // and "D" to mean "Data bytes".
 
-const FEED_T = Buffer.from([0])
-const CLASSIC_FEED_TF = Buffer.from([0, 0])
-const GABBYGR_FEED_TF = Buffer.from([0, 1])
-const BENDYBT_FEED_TF = Buffer.from([0, 3])
+const TYPES = require('./bfe.json')
 
-const MSG_T = Buffer.from([1])
-const CLASSIC_MSG_TF = Buffer.from([1, 0])
-const GABBYGR_MSG_TF = Buffer.from([1, 1])
-const BENDYBT_MSG_TF = Buffer.from([1, 4])
+const FEED = TYPES[0]
+const FEED_T = Buffer.from([FEED.code])
+const CLASSIC_FEED_TF = Buffer.from([FEED.code, FEED.formats[0].code])
+const GABBYGR_FEED_TF = Buffer.from([FEED.code, FEED.formats[1].code])
+const BENDYBT_FEED_TF = Buffer.from([FEED.code, FEED.formats[3].code])
 
-const BLOB_T = Buffer.from([2])
-const CLASSIC_BLOB_TF = Buffer.from([2, 0])
+const MSG = TYPES[1]
+const MSG_T = Buffer.from([MSG.code])
+const CLASSIC_MSG_TF = Buffer.from([MSG.code, MSG.formats[0].code])
+const GABBYGR_MSG_TF = Buffer.from([MSG.code, MSG.formats[1].code])
+const BENDYBT_MSG_TF = Buffer.from([MSG.code, MSG.formats[4].code])
 
-const SIGNATURE_TF = Buffer.from([4, 0])
+const BLOB = TYPES[2]
+const BLOB_T = Buffer.from([BLOB.code])
+const CLASSIC_BLOB_TF = Buffer.from([BLOB.code, BLOB.formats[0].code])
 
-const BOX_T = Buffer.from([5])
-const BOX1_TF = Buffer.from([5, 0])
-const BOX2_TF = Buffer.from([5, 1])
+const SIGNATURE = TYPES[4]
+const SIGNATURE_TF = Buffer.from([SIGNATURE.code, SIGNATURE.formats[0].code])
 
-const STRING_TF = Buffer.from([6, 0])
-const BOOL_TF = Buffer.from([6, 1])
+const BOX = TYPES[5]
+const BOX_T = Buffer.from([BOX.code])
+const BOX1_TF = Buffer.from([BOX.code, BOX.formats[0].code])
+const BOX2_TF = Buffer.from([BOX.code, BOX.formats[1].code])
+
+const GENERIC = TYPES[6]
+const STRING_TF = Buffer.from([GENERIC.code, GENERIC.formats[0].code])
+const BOOL_TF = Buffer.from([GENERIC.code, GENERIC.formats[1].code])
 const BOOL_TRUE = Buffer.from([1])
 const BOOL_FALSE = Buffer.from([0])
-const NIL_TF = Buffer.from([6, 2])
+const NIL_TF = Buffer.from([GENERIC.code, GENERIC.formats[2].code])
 const NIL_TFD = NIL_TF
 
 const encoder = {
@@ -236,4 +244,5 @@ function decode(input) {
 module.exports = {
   encode,
   decode,
+  bfeTypes: TYPES
 }
