@@ -4,36 +4,59 @@
 
 const TYPES = require('./bfe.json')
 
-const FEED = TYPES[0]
+function convertTypesToNamedTypes(TYPES) {
+  const NAMED_TYPES = {}
+
+  function convertFormats(type) {
+    const formats = {}
+    for (let i = 0; i < type.formats.length; ++i) {
+      const format = type.formats[i]
+      formats[format.format] = format
+    }
+
+    return Object.assign(type, { formats })
+  }
+
+  for (let i = 0; i < TYPES.length; ++i) {
+    const type = TYPES[i]
+    NAMED_TYPES[type.type] = convertFormats(type)
+  }
+
+  return NAMED_TYPES
+}
+
+const NAMED_TYPES = convertTypesToNamedTypes(TYPES)
+
+const FEED = NAMED_TYPES['feed']
 const FEED_T = Buffer.from([FEED.code])
-const CLASSIC_FEED_TF = Buffer.from([FEED.code, FEED.formats[0].code])
-const GABBYGR_FEED_TF = Buffer.from([FEED.code, FEED.formats[1].code])
-const BENDYBT_FEED_TF = Buffer.from([FEED.code, FEED.formats[3].code])
+const CLASSIC_FEED_TF = Buffer.from([FEED.code, FEED.formats['ssb/classic'].code])
+const GABBYGR_FEED_TF = Buffer.from([FEED.code, FEED.formats['ssb/gabby-grove'].code])
+const BENDYBT_FEED_TF = Buffer.from([FEED.code, FEED.formats['ssb/bendy-butt'].code])
 
-const MSG = TYPES[1]
+const MSG = NAMED_TYPES['msg']
 const MSG_T = Buffer.from([MSG.code])
-const CLASSIC_MSG_TF = Buffer.from([MSG.code, MSG.formats[0].code])
-const GABBYGR_MSG_TF = Buffer.from([MSG.code, MSG.formats[1].code])
-const BENDYBT_MSG_TF = Buffer.from([MSG.code, MSG.formats[4].code])
+const CLASSIC_MSG_TF = Buffer.from([MSG.code, MSG.formats['ssb/classic'].code])
+const GABBYGR_MSG_TF = Buffer.from([MSG.code, MSG.formats['ssb/gabby-grove'].code])
+const BENDYBT_MSG_TF = Buffer.from([MSG.code, MSG.formats['ssb/bendy-butt'].code])
 
-const BLOB = TYPES[2]
+const BLOB = NAMED_TYPES['blob']
 const BLOB_T = Buffer.from([BLOB.code])
-const CLASSIC_BLOB_TF = Buffer.from([BLOB.code, BLOB.formats[0].code])
+const CLASSIC_BLOB_TF = Buffer.from([BLOB.code, BLOB.formats['ssb/classic'].code])
 
-const SIGNATURE = TYPES[4]
-const SIGNATURE_TF = Buffer.from([SIGNATURE.code, SIGNATURE.formats[0].code])
+const SIGNATURE = NAMED_TYPES['signature']
+const SIGNATURE_TF = Buffer.from([SIGNATURE.code, SIGNATURE.formats['ed25519'].code])
 
-const BOX = TYPES[5]
+const BOX = NAMED_TYPES['encrypted']
 const BOX_T = Buffer.from([BOX.code])
-const BOX1_TF = Buffer.from([BOX.code, BOX.formats[0].code])
-const BOX2_TF = Buffer.from([BOX.code, BOX.formats[1].code])
+const BOX1_TF = Buffer.from([BOX.code, BOX.formats['box1'].code])
+const BOX2_TF = Buffer.from([BOX.code, BOX.formats['box2'].code])
 
-const GENERIC = TYPES[6]
-const STRING_TF = Buffer.from([GENERIC.code, GENERIC.formats[0].code])
-const BOOL_TF = Buffer.from([GENERIC.code, GENERIC.formats[1].code])
+const GENERIC = NAMED_TYPES['generic']
+const STRING_TF = Buffer.from([GENERIC.code, GENERIC.formats['UTF8 string'].code])
+const BOOL_TF = Buffer.from([GENERIC.code, GENERIC.formats['boolean'].code])
 const BOOL_TRUE = Buffer.from([1])
 const BOOL_FALSE = Buffer.from([0])
-const NIL_TF = Buffer.from([GENERIC.code, GENERIC.formats[2].code])
+const NIL_TF = Buffer.from([GENERIC.code, GENERIC.formats['nil'].code])
 const NIL_TFD = NIL_TF
 
 const encoder = {
@@ -244,5 +267,6 @@ function decode(input) {
 module.exports = {
   encode,
   decode,
-  bfeTypes: TYPES
+  bfeTypes: TYPES,
+  bfeNamedTypes: NAMED_TYPES
 }
