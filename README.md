@@ -32,5 +32,26 @@ same.
 Takes an encoded value (such as the output from `encode`) and returns the
 decoded counterparts as JavaScript primitives.
 
+### bfeTypes()
+
+Returns the `bfe.json` object that can be used to look up information
+based on Type and Field. Example:
+
+```
+const { bfeTypes } = require('ssb-bfe')
+const classic_key_size = bfeTypes[0][0].data_length
+```
+
+### bfeNamedTypes()
+
+Returns the `bfe.json` object converted to a map where the keys are
+the type and format names. Example:
+
+```
+const { bfeNamedTypes } = require('ssb-bfe')
+const FEED = bfeNamedTypes['feed']
+const CLASSIC_FEED_TF = Buffer.from([FEED.code, FEED.formats['ssb/classic'].code])
+```
+
 [ssb binary field encodings]: https://github.com/ssb-ngi-pointer/ssb-binary-field-encodings-spec
 [TFD]: https://github.com/ssbc/envelope-spec/blob/master/encoding/tfk.md
