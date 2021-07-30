@@ -14,7 +14,7 @@ function convertTypesToNamedTypes(TYPES) {
       formats[format.format] = format
     }
 
-    return Object.assign(type, { formats })
+    return {...type, formats }
   }
 
   for (let i = 0; i < TYPES.length; ++i) {
