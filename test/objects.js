@@ -32,7 +32,7 @@ tape('objects - arrays! (encode/decode)', function (t) {
   t.equals(
     encoded[0].slice(0, 2).toString('hex'),
     '0600',
-    'string is mapped to BFE 6,1'
+    'string is mapped to BFE 6,0'
   )
   t.equals(
     encoded[1].slice(0, 2).toString('hex'),
