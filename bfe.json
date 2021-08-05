@@ -16,7 +16,7 @@
     "formats": [
       { "code": 0, "format": "ssb/classic",     "data_length": 32, "sigil": "%", "suffix": ".sha256"   },
       { "code": 1, "format": "ssb/gabby-grove", "data_length": 32, "sigil": "%", "suffix": ".ggmsg-v1" },
-      { "code": 2, "format": "",                "data_length": 32, "sigil": "%", "suffix": ".cloaked" },
+      { "code": 2, "format": "cloake msg",      "data_length": 32, "sigil": "%", "suffix": ".cloaked" },
       { "code": 3, "format": "bamboo",          "data_length": 64, "sigil": "%", "suffix": ".bamboo" },
       { "code": 4, "format": "ssb/bendy-butt",  "data_length": 32, "sigil": "%", "suffix": ".bbmsg-v1" }
     ]
@@ -32,14 +32,14 @@
     "code": 3,
     "type": "diffie-hellman",
     "formats": [
-      { "code": 0, "format": "curve25519", "key_length": 32 }
+      { "code": 0, "format": "curve25519", "data_length": 32 }
     ]
   },
   {
     "code": 4,
     "type": "signature",
     "formats": [
-      { "code": 0, "format": "ed25519", "signature_length": 64 }
+      { "code": 0, "format": "ed25519", "data_length": 64, "suffix": ".ed25519" }
     ]
   },
   {
