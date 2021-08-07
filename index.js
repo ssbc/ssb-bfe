@@ -4,6 +4,45 @@
 
 const TYPES = require('./bfe.json')
 
+const BUFFED_TYPES = TYPES.map((type) => {
+  return {
+    ...type,
+    code: Buffer.from([type.code]),
+    formats: type.formats.map((format) => {
+      return {
+        ...format,
+        code: Buffer.from([format.code]),
+        TFCode: Buffer.from([type.code, format.code]),
+        suffixChecks: getSuffixChecks(format.suffix),
+      }
+    }),
+  }
+})
+
+function getSuffixChecks(suffix) {
+  if (!suffix) return
+
+  const result = []
+  for (let type of TYPES) {
+    for (let format of type.formats) {
+      if (format.suffix) {
+      }
+      if (
+        format.suffix &&
+        format.suffix.endsWith(suffix) &&
+        format.suffix !== suffix
+      ) {
+        result.push(format.suffix)
+      }
+    }
+  }
+
+  return result.length ? result : undefined
+}
+
+// WIP SUFFIX_ONLY_TFS
+// SIGILLED_TFS
+
 function convertTypesToNamedTypes(TYPES) {
   const NAMED_TYPES = {}
 
@@ -127,15 +166,6 @@ const encoder = {
     return Buffer.concat([tf, d])
   },
 
-  dh(dhURI) {
-    const key = Buffer.from(
-      dhURI.replace('ssb://diffie-helman/curve25519/', ''),
-      'base64'
-    )
-
-    return Buffer.concat([DH_TF, key])
-  },
-
   box(boxedStr) {
     if (boxedStr.endsWith('.box')) {
       const b64part = boxedStr.substring(0, boxedStr.length - '.box'.length)
@@ -165,7 +195,96 @@ const encoder = {
   },
 }
 
+function findTypeFormat(input) {
+  // Look for type based on sigil
+  // NOTE tests guarentee that sigil is unique across types
+  let type = BUFFED_TYPES.find(
+    (type) => type.sigil && input.startsWith(type.sigil)
+  )
+  let format
+
+  // Look for type, format based on suffix
+  // NOTE tests guarentee suffixes are unique for all type-formats
+  if (!type) {
+    for (let type of BUFFED_TYPES) {
+      for (let format of type.formats) {
+        if (isInputSuffixMatch(input, format)) {
+          return { type, format }
+        }
+      }
+    }
+  }
+
+  if (type && !format) {
+    format = type.formats.find(
+      (format) => format.suffix && input.endsWith(format.suffix)
+    )
+  }
+
+  return { type, format }
+}
+
+function isInputSuffixMatch(input, format) {
+  if (format.suffix && input.endsWith(format.suffix))
+    console.log('format match?', format)
+  return (
+    format.suffix &&
+    input.endsWith(format.suffix) &&
+    !(
+      // check we've not matched with part of a longer cousin suffix
+      // e.g. .ed25519 in .sig.ed25519
+      (
+        format.suffixChecks &&
+        format.suffixChecks.some((s) => input.endsWith(s))
+      )
+    )
+  )
+}
+
 function encode(input) {
+  /* cases we don't encode */
+  if (input === undefined || Buffer.isBuffer(input) || Number.isInteger(input))
+    return input
+
+  if (typeof input === 'string') {
+    /* ssb-URI */
+    if (input.startsWith('ssb://')) {
+      let [type, format, ...data] = input.slice(6).split('/')
+      // *FIRE* WARNING ... are we URIEncoding our URIs?!
+      type = NAMED_TYPES[type]
+      if (type) {
+        format = type.formats[format]
+        if (format) {
+          return Buffer.concat([
+            Buffer.from([type.code]),
+            Buffer.from([format.code]),
+            Buffer.from(data.join('/'), 'base64'),
+          ])
+        }
+      }
+    }
+
+    /* classic links (sigil and/or suffix matches */
+    const { type, format } = findTypeFormat(input)
+    if (type && format) {
+      let data = input
+      if (type.sigil) data = data.slice(1)
+      if (format.suffix) data = data.replace(format.suffix, '')
+
+      return Buffer.concat([
+        type.code,
+        format.code,
+        Buffer.from(data, 'base64'),
+      ])
+    }
+
+    /* fallback to (type: generic, format: UTF8) */
+    return Buffer.concat([Buffer.from([6, 0]), Buffer.from(input, 'utf8')])
+  }
+  if (typeof input === 'boolean') return encoder.boolean(input)
+  if (input === null) return NIL_TFD
+
+  /* recursions */
   if (Array.isArray(input)) {
     return input.map((x) => {
       const y = encode(x)
@@ -173,35 +292,17 @@ function encode(input) {
       else return y
     })
   }
-  if (input === undefined) {
-    return undefined
-  } else if (input === null) {
-    return NIL_TFD
-  } else if (typeof input === 'object' && !Buffer.isBuffer(input)) {
+  if (typeof input === 'object') {
+    // we know it's not: Buffer,null,Array
     const output = {}
     for (let key in input) {
-      const x = input[key]
-      const y = encode(x)
+      const y = encode(input[key])
       if (y !== undefined) output[key] = y
     }
     return output
-  } else if (typeof input === 'string') {
-    if (input.startsWith('@')) return encoder.feed(input)
-    else if (input.startsWith('%')) return encoder.message(input)
-    else if (input.startsWith('&')) return encoder.blob(input)
-    else if (input.endsWith('.sig.ed25519')) return encoder.signature(input)
-    else if (input.endsWith('.box2') || input.endsWith('.box'))
-      return encoder.box(input)
-    else return encoder.string(input)
-  } else if (typeof input === 'boolean') {
-    return encoder.boolean(input)
-  } else if (Number.isInteger(input) || Buffer.isBuffer(input)) {
-    return input
-  } else {
-    console.warn('not encoding unknown value', input)
-    // FIXME: more checks, including floats!
-    return input
   }
+
+  throw new Error('cannot encoding, type is not defined')
 }
 
 const decoder = {
@@ -271,39 +372,77 @@ const decoder = {
 }
 
 function decode(input) {
-  if (Array.isArray(input)) {
-    return input.map(decode)
-  } else if (Buffer.isBuffer(input)) {
+  /* cases we don't decode */
+  if (input === null) return null
+  if (Number.isInteger(input)) return input
+
+  if (Buffer.isBuffer(input)) {
     if (input.length < 2)
-      throw new Error(
-        'Buffer is missing first two type&format fields: ' + input
-      )
+      throw new Error('Buffer is missing first two type & format bytes')
     const t = input.slice(0, 1)
-    const tf = input.slice(0, 2)
-    if (tf.equals(STRING_TF)) return decoder.string(input)
-    else if (tf.equals(BOOL_TF)) return decoder.boolean(input)
-    else if (tf.equals(NIL_TF)) return null
-    else if (t.equals(FEED_T)) return decoder.feed(input)
-    else if (t.equals(MSG_T)) return decoder.message(input)
-    else if (t.equals(BLOB_T)) return decoder.blob(input)
-    else if (t.equals(BOX_T)) return decoder.box(input)
-    else if (tf.equals(SIGNATURE_TF)) return decoder.signature(input)
-    else return input
-  } else if (typeof input === 'object' && input !== null) {
+    const type = BUFFED_TYPES.find((type) => t.equals(type.code))
+
+    // const tf = input.slice(0, 2)
+    if (type) {
+      const f = input.slice(1, 2)
+      const format = type.formats.find((format) => f.equals(format.code))
+      if (format) {
+        // classic
+        if (type.sigil || format.suffix) {
+          return [
+            type.sigil || '',
+            input.slice(2).toString('base64'),
+            format.suffix || '',
+          ].join('')
+        } else if (format.TFCode.equals(STRING_TF))
+          return input.slice(2).toString('utf8')
+        else if (format.TFCode.equals(NIL_TF)) return null
+        else if (format.TFCode.equals(BOOL_TF)) {
+          if (input.size > 3) throw new Error('boolean BFE must be 3 bytes')
+          if (input.slice(2, 3).equals(BOOL_FALSE)) return false
+          if (input.slice(2, 3).equals(BOOL_TRUE)) return true
+
+          throw new Error('invalid boolean BFE')
+        } else {
+          return [
+            'ssb:/',
+            type.type,
+            format.format,
+            input.slice(2).toString('base64'),
+          ].join('/')
+        }
+      }
+    } else throw new Error('unknown type')
+
+    // if (tf.equals(STRING_TF)) return decoder.string(input)
+    // else if (tf.equals(BOOL_TF)) return decoder.boolean(input)
+    // else if (tf.equals(NIL_TF)) return null
+    // else if (t.equals(FEED_T)) return decoder.feed(input)
+    // else if (t.equals(MSG_T)) return decoder.message(input)
+    // else if (t.equals(BLOB_T)) return decoder.blob(input)
+    // else if (t.equals(BOX_T)) return decoder.box(input)
+    // else if (tf.equals(SIGNATURE_TF)) return decoder.signature(input)
+  }
+
+  /* recurse */
+  if (Array.isArray(input)) return input.map(decode)
+  if (typeof input === 'object') {
+    // know it's not null, Array
     const output = {}
     for (let key in input) {
-      const y = input[key]
-      const x = decode(y)
-      output[key] = x
+      output[key] = decode(input[key])
     }
     return output
-  } // FIXME: more checks, including floats!
-  else return input
+  }
+
+  // FIXME: more checks, including floats!
+  throw new Error("don't know how to decode: " + input)
 }
 
 module.exports = {
   encode,
   decode,
+  toString: decode,
   bfeTypes: TYPES,
   bfeNamedTypes: NAMED_TYPES,
 }
