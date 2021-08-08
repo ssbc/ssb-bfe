@@ -14,7 +14,7 @@ function convertTypesToNamedTypes(TYPES) {
       formats[format.format] = format
     }
 
-    return {...type, formats }
+    return { ...type, formats }
   }
 
   for (let i = 0; i < TYPES.length; ++i) {
@@ -29,22 +29,44 @@ const NAMED_TYPES = convertTypesToNamedTypes(TYPES)
 
 const FEED = NAMED_TYPES['feed']
 const FEED_T = Buffer.from([FEED.code])
-const CLASSIC_FEED_TF = Buffer.from([FEED.code, FEED.formats['ssb/classic'].code])
-const GABBYGR_FEED_TF = Buffer.from([FEED.code, FEED.formats['ssb/gabby-grove'].code])
-const BENDYBT_FEED_TF = Buffer.from([FEED.code, FEED.formats['ssb/bendy-butt'].code])
+const CLASSIC_FEED_TF = Buffer.from([
+  FEED.code,
+  FEED.formats['ssb/classic'].code,
+])
+const GABBYGR_FEED_TF = Buffer.from([
+  FEED.code,
+  FEED.formats['ssb/gabby-grove'].code,
+])
+const BENDYBT_FEED_TF = Buffer.from([
+  FEED.code,
+  FEED.formats['ssb/bendy-butt'].code,
+])
 
 const MSG = NAMED_TYPES['msg']
 const MSG_T = Buffer.from([MSG.code])
 const CLASSIC_MSG_TF = Buffer.from([MSG.code, MSG.formats['ssb/classic'].code])
-const GABBYGR_MSG_TF = Buffer.from([MSG.code, MSG.formats['ssb/gabby-grove'].code])
-const BENDYBT_MSG_TF = Buffer.from([MSG.code, MSG.formats['ssb/bendy-butt'].code])
+const GABBYGR_MSG_TF = Buffer.from([
+  MSG.code,
+  MSG.formats['ssb/gabby-grove'].code,
+])
+const BENDYBT_MSG_TF = Buffer.from([
+  MSG.code,
+  MSG.formats['ssb/bendy-butt'].code,
+])
 
 const BLOB = NAMED_TYPES['blob']
 const BLOB_T = Buffer.from([BLOB.code])
-const CLASSIC_BLOB_TF = Buffer.from([BLOB.code, BLOB.formats['ssb/classic'].code])
+const CLASSIC_BLOB_TF = Buffer.from([
+  BLOB.code,
+  BLOB.formats['ssb/classic'].code,
+])
 
 const SIGNATURE = NAMED_TYPES['signature']
-const SIGNATURE_TF = Buffer.from([SIGNATURE.code, SIGNATURE.formats['ed25519'].code])
+const SIGNATURE_T = Buffer.from([SIGNATURE.code])
+const SIGNATURE_TF = Buffer.from([
+  SIGNATURE.code,
+  SIGNATURE.formats['ed25519'].code,
+])
 
 const BOX = NAMED_TYPES['encrypted']
 const BOX_T = Buffer.from([BOX.code])
@@ -52,7 +74,10 @@ const BOX1_TF = Buffer.from([BOX.code, BOX.formats['box1'].code])
 const BOX2_TF = Buffer.from([BOX.code, BOX.formats['box2'].code])
 
 const GENERIC = NAMED_TYPES['generic']
-const STRING_TF = Buffer.from([GENERIC.code, GENERIC.formats['UTF8 string'].code])
+const STRING_TF = Buffer.from([
+  GENERIC.code,
+  GENERIC.formats['UTF8 string'].code,
+])
 const BOOL_TF = Buffer.from([GENERIC.code, GENERIC.formats['boolean'].code])
 const BOOL_TRUE = Buffer.from([1])
 const BOOL_FALSE = Buffer.from([0])
@@ -154,8 +179,7 @@ function encode(input) {
     else if (input.startsWith('%')) return encoder.message(input)
     else if (input.startsWith('&')) return encoder.blob(input)
     else if (input.endsWith('.sig.ed25519')) return encoder.signature(input)
-    else if (input.endsWith('.box2') || input.endsWith('.box'))
-      return encoder.box(input)
+    else if (input.match(/\.box\d*$/)) return encoder.box(input)
     else return encoder.string(input)
   } else if (typeof input === 'boolean') {
     return encoder.boolean(input)
@@ -250,7 +274,10 @@ function decode(input) {
     else if (t.equals(MSG_T)) return decoder.message(input)
     else if (t.equals(BLOB_T)) return decoder.blob(input)
     else if (t.equals(BOX_T)) return decoder.box(input)
-    else if (tf.equals(SIGNATURE_TF)) return decoder.signature(input)
+    else if (t.equals(SIGNATURE_T)) {
+      if (tf.equals(SIGNATURE_TF)) return decoder.signature(input)
+      else throw new Error('Unknown signature type')
+    } else if (tf.equals(SIGNATURE_TF)) return decoder.signature(input)
     else return input
   } else if (typeof input === 'object' && input !== null) {
     const output = {}
@@ -268,5 +295,5 @@ module.exports = {
   encode,
   decode,
   bfeTypes: TYPES,
-  bfeNamedTypes: NAMED_TYPES
+  bfeNamedTypes: NAMED_TYPES,
 }

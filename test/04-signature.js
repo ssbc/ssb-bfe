@@ -10,5 +10,17 @@ tape('04 signature type', function (t) {
   t.deepEqual(encoded[0].slice(0, 2), Buffer.from([4, 0]), 'detected signature')
 
   t.deepEqual(bfe.decode(encoded), values, 'properly decoded')
+
+  t.doesNotThrow(
+    () => bfe.encode('ZG9n.sig.bob'),
+    'unknown signature suffix means encoded as a string'
+  )
+
+  /* unhappy paths */
+  t.throws(
+    () => bfe.decode(Buffer.from([4, 200, 21])), // type 200 DNE
+    'unknown signature type decode throws'
+  )
+
   t.end()
 })
