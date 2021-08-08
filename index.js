@@ -3,6 +3,7 @@
 // and "D" to mean "Data bytes".
 
 const TYPES = require('./bfe.json')
+const { isFeedLike, isMsgLike, isBlobLike } = require('./util')
 
 function convertTypesToNamedTypes(TYPES) {
   const NAMED_TYPES = {}
@@ -175,9 +176,9 @@ function encode(input) {
     }
     return output
   } else if (typeof input === 'string') {
-    if (input.startsWith('@')) return encoder.feed(input)
-    else if (input.startsWith('%')) return encoder.message(input)
-    else if (input.startsWith('&')) return encoder.blob(input)
+    if (isFeedLike(input)) return encoder.feed(input)
+    else if (isMsgLike(input)) return encoder.message(input)
+    else if (isBlobLike(input)) return encoder.blob(input)
     else if (input.endsWith('.sig.ed25519')) return encoder.signature(input)
     else if (input.match(/\.box\d*$/)) return encoder.box(input)
     else return encoder.string(input)
