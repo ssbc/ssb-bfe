@@ -84,6 +84,10 @@ const BOOL_TRUE = Buffer.from([1])
 const BOOL_FALSE = Buffer.from([0])
 const NIL_TF = Buffer.from([GENERIC.code, GENERIC.formats['nil'].code])
 const NIL_TFD = NIL_TF
+const BYTES_TF = Buffer.from([
+  GENERIC.code,
+  GENERIC.formats['arbitrary bytes'].code,
+])
 
 const encoder = {
   feed(feedId) {
@@ -153,6 +157,10 @@ const encoder = {
     const d = bool ? BOOL_TRUE : BOOL_FALSE
     return Buffer.concat([BOOL_TF, d])
   },
+
+  bytes(buf) {
+    return Buffer.concat([BYTES_TF, buf])
+  },
 }
 
 function encode(input) {
@@ -184,8 +192,10 @@ function encode(input) {
     else return encoder.string(input)
   } else if (typeof input === 'boolean') {
     return encoder.boolean(input)
+  } else if (Buffer.isBuffer(input)) {
+    return encoder.bytes(input)
   } else {
-    if (!Number.isInteger(input) && !Buffer.isBuffer(input))
+    if (!Number.isInteger(input))
       console.warn('not encoding unknown value', input)
     // FIXME: more checks, including floats!
     return input
@@ -256,6 +266,10 @@ const decoder = {
     const d = buf.slice(2)
     return d.equals(BOOL_TRUE)
   },
+
+  bytes(buf) {
+    return buf.slice(2)
+  },
 }
 
 function decode(input) {
@@ -279,7 +293,8 @@ function decode(input) {
       if (tf.equals(SIGNATURE_TF)) return decoder.signature(input)
       else throw new Error('Unknown signature type')
     } else if (tf.equals(SIGNATURE_TF)) return decoder.signature(input)
-    else return input
+    else if (tf.equals(BYTES_TF)) return decoder.bytes(input)
+    else throw new Error('Cannot decode buffer ' + input.toString('hex'))
   } else if (typeof input === 'object' && input !== null) {
     const output = {}
     for (let key in input) {
