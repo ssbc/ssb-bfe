@@ -23,5 +23,14 @@ tape('05 encrypted type', function (t) {
   )
 
   t.deepEquals(bfe.decode(encoded), values, 'decode works')
+
+  /* unhappy paths */
+  const invalidValue = values[0] + 200
+  t.throws(() => bfe.encode(invalidValue), 'unknown box encode throws')
+  t.throws(
+    () => bfe.decode(Buffer.from([5, 200, 21])), // type 200 DNE
+    'unknown box type decode throws'
+  )
+
   t.end()
 })
