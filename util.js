@@ -4,7 +4,7 @@ const { isFeedType, isMsgType, isBlobType } = require('ssb-ref')
 module.exports = {
   decorateBFE,
   findClassicTypeFormat,
-  sortByNames,
+  definitionsToDict,
 }
 
 const encryptedTypeRegex = IsCanonicalBase64('', '\\.box\\d*')
@@ -41,7 +41,7 @@ function buildSigilSuffixRegexp(type, format) {
       undefined
 }
 
-function sortByNames(types) {
+function definitionsToDict(types) {
   const NAMED_TYPES = {}
 
   function convertFormats(type) {
@@ -79,14 +79,6 @@ function findClassicTypeFormat(input, types) {
 
     return { type, format }
   }
-
-  // for (const type of types) {
-  //   for (const format of type.formats) {
-  //     if (format.suffix && format.sigilSuffixRegexp.test(input)) {
-  //       return { type, format }
-  //     }
-  //   }
-  // }
 
   return { type, format }
 }

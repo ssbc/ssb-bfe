@@ -3,7 +3,11 @@
 // and "D" to mean "Data bytes".
 
 const definitions = require('./bfe.json')
-const { decorateBFE, sortByNames, findClassicTypeFormat } = require('./util')
+const {
+  decorateBFE,
+  definitionsToDict,
+  findClassicTypeFormat,
+} = require('./util')
 
 const TYPES = decorateBFE(definitions)
 
@@ -25,7 +29,7 @@ const encoder = {
     const d = input ? BOOL.TRUE : BOOL.FALSE
     return Buffer.concat([BOOL.TF, d])
   },
-  classic(input, type, format) {
+  sigilSuffix(input, type, format) {
     let data = input
     if (type.sigil) data = data.slice(1)
     if (format.suffix) data = data.slice(0, -format.suffix.length)
@@ -33,7 +37,7 @@ const encoder = {
     return Buffer.concat([type.code, format.code, Buffer.from(data, 'base64')])
   },
   string(input) {
-    return Buffer.concat([Buffer.from([6, 0]), Buffer.from(input, 'utf8')])
+    return Buffer.concat([STRING.TF, Buffer.from(input, 'utf8')])
   },
 }
 
@@ -46,7 +50,7 @@ function encode(input) {
     /* looks for classic sigil/suffix matches */
     const { type, format } = findClassicTypeFormat(input, TYPES)
     if (type) {
-      if (format) return encoder.classic(input, type, format)
+      if (format) return encoder.sigilSuffix(input, type, format)
       else throw new Error(`Unknown ${type.type} format`)
     }
 
@@ -75,11 +79,11 @@ function encode(input) {
     return output
   }
 
-  throw new Error('cannot encoding, type is not defined')
+  throw new Error('cannot encode input ' + input)
 }
 
 const decoder = {
-  classic(input, type, format) {
+  sigilSuffix(input, type, format) {
     return [
       type.sigil || '',
       input.slice(2).toString('base64'),
@@ -87,11 +91,15 @@ const decoder = {
     ].join('')
   },
   bool(input) {
-    if (input.size > 3) throw new Error('boolean BFE must be 3 bytes')
+    if (input.size > 3)
+      throw new Error('boolean BFE must be 3 bytes, was ' + input.size)
     if (input.slice(2, 3).equals(BOOL.FALSE)) return false
     if (input.slice(2, 3).equals(BOOL.TRUE)) return true
 
     throw new Error('invalid boolean BFE')
+  },
+  string(input) {
+    return input.slice(2).toString('utf8')
   },
 }
 
@@ -102,12 +110,13 @@ function decode(input) {
 
   if (Buffer.isBuffer(input)) {
     if (input.length < 2)
-      throw new Error('Buffer is missing first two type & format bytes')
+      throw new Error(
+        'Buffer is missing first two type&format fields: ' + input
+      )
 
     if (input.equals(NIL.TFD)) return null
     if (input.slice(0, 2).equals(BOOL.TF)) return decoder.bool(input)
-    if (input.slice(0, 2).equals(STRING.TF))
-      return input.slice(2).toString('utf8')
+    if (input.slice(0, 2).equals(STRING.TF)) return decoder.string(input)
 
     const type = TYPES.find((type) => type.code.equals(input.slice(0, 1)))
     if (type) {
@@ -116,7 +125,7 @@ function decode(input) {
       )
       if (format) {
         if (type.sigil || format.suffix)
-          return decoder.classic(input, type, format)
+          return decoder.sigilSuffix(input, type, format)
       }
     }
 
@@ -141,7 +150,7 @@ function decode(input) {
 module.exports = {
   encode,
   decode,
-  toString: decode,
+  toString: decode, // alias
   bfeTypes: definitions,
-  bfeNamedTypes: sortByNames(TYPES),
+  bfeNamedTypes: definitionsToDict(TYPES),
 }
