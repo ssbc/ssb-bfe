@@ -8,7 +8,7 @@ tape('05 encrypted type', function (t) {
   ]
   const encoded = bfe.encode(values)
 
-  t.deepEqual(encoded[0].slice(0, 2), Buffer.from([5, 0]), 'detected box1')
+  t.deepEqual(encoded[0].slice(0, 2), Buffer.from([5, 0]), 'detected box')
   t.deepEqual(encoded[1].slice(0, 2), Buffer.from([5, 1]), 'detected box2')
 
   t.deepEqual(
