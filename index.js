@@ -3,30 +3,10 @@
 // and "D" to mean "Data bytes".
 
 const { isFeedType, isMsgType, isBlobType } = require('ssb-ref')
+const { definitionsToDict } = require('./util')
 const TYPES = require('./bfe.json')
 
-function convertTypesToNamedTypes(TYPES) {
-  const NAMED_TYPES = {}
-
-  function convertFormats(type) {
-    const formats = {}
-    for (let i = 0; i < type.formats.length; ++i) {
-      const format = type.formats[i]
-      formats[format.format] = format
-    }
-
-    return { ...type, formats }
-  }
-
-  for (let i = 0; i < TYPES.length; ++i) {
-    const type = TYPES[i]
-    NAMED_TYPES[type.type] = convertFormats(type)
-  }
-
-  return NAMED_TYPES
-}
-
-const NAMED_TYPES = convertTypesToNamedTypes(TYPES)
+const NAMED_TYPES = definitionsToDict(TYPES)
 
 const FEED = NAMED_TYPES['feed']
 const FEED_T = Buffer.from([FEED.code])
@@ -139,6 +119,9 @@ const encoder = {
   },
 
   signature(sig) {
+    if (!sig.endsWith('.sig.ed25519')) {
+      throw new Error('unknown signature format: ' + sig)
+    }
     const b64part = sig.substring(0, sig.length - '.sig.ed25519'.length)
     const d = Buffer.from(b64part, 'base64')
     return Buffer.concat([SIGNATURE_TF, d])
@@ -179,7 +162,8 @@ function encode(input) {
     if (isFeedType(input)) return encoder.feed(input)
     else if (isMsgType(input)) return encoder.message(input)
     else if (isBlobType(input)) return encoder.blob(input)
-    else if (input.endsWith('.sig.ed25519')) return encoder.signature(input)
+    else if (input.match(/\.sig\.[a-zA-Z0-9]+$/))
+      return encoder.signature(input)
     else if (input.match(/\.box\d*$/)) return encoder.box(input)
     else return encoder.string(input)
   } else if (typeof input === 'boolean') {
