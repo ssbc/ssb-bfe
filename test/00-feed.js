@@ -17,7 +17,8 @@ tape('00 feed type', function (t) {
   t.deepEquals(bfe.decode(encoded), values, 'decode works')
 
   /* unhappy paths */
-  t.throws(() => bfe.encode('@dogFeed'), 'unknown feedId encode throws')
+  const unknownFeedId = '@' + Buffer.from('dog').toString('base64') + '.dog255'
+  t.throws(() => bfe.encode(unknownFeedId), 'unknown feedId encode throws')
   t.throws(
     () => bfe.decode(Buffer.from([0, 200, 21])), // type 200 DNE
     'unknown feed type decode throws'

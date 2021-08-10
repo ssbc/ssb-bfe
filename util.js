@@ -1,15 +1,19 @@
 const IsCanonicalBase64 = require('is-canonical-base64')
+const { isFeedType, isMsgType, isBlobType } = require('ssb-ref')
 
 module.exports = {
-  bufferizeCodes,
+  decorateBFE,
   findClassicTypeFormat,
-  sortByNames
+  sortByNames,
 }
 
-const encryptedRegex = IsCanonicalBase64('', '.box\\d*')
-const isEncrypted = (input) => encryptedRegex.test(input)
+const encryptedTypeRegex = IsCanonicalBase64('', '\\.box\\d*')
+const sigTypeRegex = IsCanonicalBase64('', '\\.sig\\.[a-zA-Z0-9]+')
 
-function bufferizeCodes(types) {
+const isEncryptedType = (input) => encryptedTypeRegex.test(input)
+const isSigType = (input) => sigTypeRegex.test(input)
+
+function decorateBFE(types) {
   return types.map((type) => {
     return {
       ...type,
@@ -19,32 +23,22 @@ function bufferizeCodes(types) {
           ...format,
           code: Buffer.from([format.code]),
           // TFCode: Buffer.from([type.code, format.code]),
-          suffixChecks: getSuffixChecks(format.suffix),
+          sigilSuffixRegexp: buildSigilSuffixRegexp(type, format),
         }
       }),
     }
   })
+}
 
-  function getSuffixChecks(suffix) {
-    if (!suffix) return
-
-    const result = []
-    for (let type of types) {
-      for (let format of type.formats) {
-        if (format.suffix) {
-        }
-        if (
-          format.suffix &&
-          format.suffix.endsWith(suffix) &&
-          format.suffix !== suffix
-        ) {
-          result.push(format.suffix)
-        }
-      }
-    }
-
-    return result.length ? result : undefined
-  }
+function buildSigilSuffixRegexp(type, format) {
+  return type.sigil || format.suffix
+    ? IsCanonicalBase64(
+        type.sigil || '',
+        (format.suffix && format.suffix.replace('.', '\\.')) || '',
+        format.key_length
+      )
+    : // NOTE this assumes all sigil / suffic encodings are base64
+      undefined
 }
 
 function sortByNames(types) {
@@ -52,14 +46,14 @@ function sortByNames(types) {
 
   function convertFormats(type) {
     const formats = {}
-    for (let format of type.formats) {
+    for (const format of type.formats) {
       formats[format.format] = format
     }
 
     return { ...type, formats }
   }
 
-  for (let type of types) {
+  for (const type of types) {
     NAMED_TYPES[type.type] = convertFormats(type)
   }
 
@@ -67,47 +61,32 @@ function sortByNames(types) {
 }
 
 function findClassicTypeFormat(input, types) {
-  // Look for type based on sigil
   // NOTE tests guarentee that sigil is unique across types
-  let type = types.find((type) => type.sigil && input.startsWith(type.sigil))
+  let type
   let format
+  if (typeof input !== 'string') return { type, format }
 
-  // Look for type, format based on suffix
-  // NOTE tests guarentee suffixes are unique for all type-formats
-  if (!type) {
-    for (let type of types) {
-      for (let format of type.formats) {
-        if (isInputSuffixMatch(format)) {
-          return { type, format }
-        }
-      }
-    }
+  if (isFeedType(input)) type = types[0]
+  else if (isMsgType(input)) type = types[1]
+  else if (isBlobType(input)) type = types[2]
+  else if (isEncryptedType(input)) type = types[5]
+  else if (isSigType(input)) type = types[4]
+  // first regexp match to narrow type
+
+  if (type) {
+    format = type.formats.find((format) => format.sigilSuffixRegexp.test(input))
+    // second regexp check to be 100% sure of match
+
+    return { type, format }
   }
 
-  // if it's reached here it's not a known .box* suffix
-  if (isEncrypted(input)) throw new Error('Unknown encrypted format')
-
-  if (type && !format) {
-    format = type.formats.find(
-      (format) => format.suffix && input.endsWith(format.suffix)
-    )
-  }
+  // for (const type of types) {
+  //   for (const format of type.formats) {
+  //     if (format.suffix && format.sigilSuffixRegexp.test(input)) {
+  //       return { type, format }
+  //     }
+  //   }
+  // }
 
   return { type, format }
-
-  function isInputSuffixMatch(format) {
-    return (
-      format.suffix &&
-      input.endsWith(format.suffix) &&
-      !(
-        // check we've not matched with part of a longer cousin suffix
-        // e.g. .ed25519 in .sig.ed25519
-        (
-          format.suffixChecks &&
-          format.suffixChecks.some((s) => input.endsWith(s))
-        )
-      )
-    )
-  }
 }
-

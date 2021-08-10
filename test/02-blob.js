@@ -11,7 +11,8 @@ tape('02 blob type ', function (t) {
   t.deepEquals(bfe.decode(encoded), values, 'decode works')
 
   /* unhappy paths */
-  t.throws(() => bfe.encode('&dogFeed'), 'unknown blobId encode throws')
+  const unknownBlobId = '&' + Buffer.from('dog').toString('base64') + '.dog255'
+  t.throws(() => bfe.encode(unknownBlobId), 'unknown blobId encode throws')
   t.throws(
     () => bfe.decode(Buffer.from([2, 200, 21])), // type 200 DNE
     'unknown blob type decode throws'

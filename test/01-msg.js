@@ -15,7 +15,8 @@ tape('01 msg type', function (t) {
   t.deepEquals(bfe.decode(encoded), values, 'decode works')
 
   /* unhappy paths */
-  t.throws(() => bfe.encode('%dogFeed'), 'unknown msgId encode throws')
+  const unknownMsgId = '%' + Buffer.from('dog').toString('base64') + '.dog255'
+  t.throws(() => bfe.encode(unknownMsgId), 'unknown msgId encode throws')
   t.throws(
     () => bfe.decode(Buffer.from([1, 200, 21])), // type 200 DNE
     'unknown msg type decode throws'
