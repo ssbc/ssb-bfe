@@ -54,7 +54,11 @@ function encode(input) {
     const { type, format } = findClassicTypeFormat(input, TYPES)
     if (type) {
       if (format) return encoder.sigilSuffix(input, type, format)
-      else throw new Error(`Unknown ${type.type} format`)
+      else {
+        throw new Error(
+          `No encoder for type=${type} format=? for string ${input}`
+        )
+      }
     }
 
     /* fallback */
@@ -82,7 +86,7 @@ function encode(input) {
     return output
   }
 
-  throw new Error('cannot encode input ' + input)
+  throw new Error('No encoder for input ' + input)
 }
 
 const decoder = {
@@ -93,13 +97,14 @@ const decoder = {
     )
   },
   bool(input) {
-    if (input.size > 3)
-      throw new Error('boolean BFE must be 3 bytes, was ' + input.size)
+    if (input.size > 3) {
+      throw new Error('Boolean BFE must be 3 bytes, was ' + input.size)
+    }
     const d = input.slice(2)
     if (d.equals(BOOL_FALSE)) return false
     if (d.equals(BOOL_TRUE)) return true
 
-    throw new Error('invalid boolean BFE')
+    throw new Error('Invalid boolean BFE ' + input.toString('hex'))
   },
   string(input) {
     const d = input.slice(2)
@@ -117,10 +122,12 @@ function decode(input) {
   if (Number.isInteger(input)) return input
 
   if (Buffer.isBuffer(input)) {
-    if (input.length < 2)
+    if (input.length < 2) {
       throw new Error(
-        'Buffer is missing first two type&format fields: ' + input
+        'Cannot decode buffer that is missing type & format fields: ' +
+          input.toString('hex')
       )
+    }
 
     const tf = input.slice(0, 2)
     if (tf.equals(NIL_TF)) return null
@@ -134,16 +141,25 @@ function decode(input) {
       const f = input.slice(1, 2)
       const format = type.formats.find((format) => format.code.equals(f))
       if (format) {
-        if (type.sigil || format.suffix)
+        if (type.sigil || format.suffix) {
           return decoder.sigilSuffix(input, type, format)
-        else
+        } else {
           throw new Error(
-            `no decoder defined yet for type: ${type.type}, format: ${format.format}`
+            `No decoder for type=${type.type} format=${
+              format.format
+            } for buffer ${input.toString('hex')}`
           )
-      } else throw new Error(`Unknown ${type.type} format`)
+        }
+      } else {
+        throw new Error(
+          `No decoder for type=${type.type} format=<${f.toString(
+            'hex'
+          )}> for buffer ${input.toString('hex')}`
+        )
+      }
     }
 
-    throw new Error('Unknown type/ format')
+    throw new Error('Cannot decode buffer ' + input.toString('hex'))
   }
 
   /* recurse */
@@ -158,7 +174,7 @@ function decode(input) {
   }
 
   // FIXME: more checks, including floats!
-  throw new Error("don't know how to decode: " + input)
+  throw new Error('Cannot decode input: ' + input)
 }
 
 module.exports = {
