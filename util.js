@@ -1,12 +1,6 @@
 const IsCanonicalBase64 = require('is-canonical-base64')
 const { isFeedType, isMsgType, isBlobType } = require('ssb-ref')
 
-module.exports = {
-  decorateBFE,
-  findClassicTypeFormat,
-  definitionsToDict,
-}
-
 const encryptedTypeRegex = IsCanonicalBase64('', '\\.box\\d*')
 const sigTypeRegex = IsCanonicalBase64('', '\\.sig\\.[a-zA-Z0-9]+')
 
@@ -41,7 +35,7 @@ function decorateBFE(types) {
   })
 }
 
-function findClassicTypeFormat(input, types) {
+function findTypeFormatForSigilSuffix(input, types) {
   // NOTE tests guarentee that sigil is unique across types
   let type
   let format
@@ -81,4 +75,10 @@ function definitionsToDict(types) {
   }
 
   return NAMED_TYPES
+}
+
+module.exports = {
+  decorateBFE,
+  findTypeFormatForSigilSuffix,
+  definitionsToDict,
 }

@@ -6,7 +6,7 @@ const definitions = require('./bfe.json')
 const {
   decorateBFE,
   definitionsToDict,
-  findClassicTypeFormat,
+  findTypeFormatForSigilSuffix,
 } = require('./util')
 
 const TYPES = decorateBFE(definitions)
@@ -51,7 +51,7 @@ function encode(input) {
 
   if (typeof input === 'string') {
     /* looks for classic sigil/suffix matches */
-    const { type, format } = findClassicTypeFormat(input, TYPES)
+    const { type, format } = findTypeFormatForSigilSuffix(input, TYPES)
     if (type) {
       if (format) return encoder.sigilSuffix(input, type, format)
       else {
