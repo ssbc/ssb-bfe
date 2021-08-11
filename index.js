@@ -1,4 +1,4 @@
-// Following the BFE spec (formally known as TFK), the naming convention in this
+// Following the BFE spec (formerly known as TFK), the naming convention in this
 // file uses "T" to mean "Type byte", "TF" to mean "Type byte and Format byte"
 // and "D" to mean "Data bytes".
 
@@ -17,16 +17,14 @@ const toTF = (type, format) =>
 
 const STRING_TF = toTF('generic', 'UTF8 string')
 const NIL_TF = toTF('generic', 'nil')
-const BOOL = {
-  TF: toTF('generic', 'boolean'),
-  TRUE: Buffer.from([1]),
-  FALSE: Buffer.from([0]),
-}
+const BOOL_TF = toTF('generic', 'boolean')
+const BOOL_TRUE = Buffer.from([1])
+const BOOL_FALSE = Buffer.from([0])
 
 const encoder = {
   boolean(input) {
-    const d = input ? BOOL.TRUE : BOOL.FALSE
-    return Buffer.concat([BOOL.TF, d])
+    const d = input ? BOOL_TRUE : BOOL_FALSE
+    return Buffer.concat([BOOL_TF, d])
   },
   sigilSuffix(input, type, format) {
     let data = input
@@ -85,22 +83,23 @@ function encode(input) {
 
 const decoder = {
   sigilSuffix(input, type, format) {
-    return [
-      type.sigil || '',
-      input.slice(2).toString('base64'),
-      format.suffix || '',
-    ].join('')
+    const d = input.slice(2)
+    return [type.sigil || '', d.toString('base64'), format.suffix || ''].join(
+      ''
+    )
   },
   bool(input) {
     if (input.size > 3)
       throw new Error('boolean BFE must be 3 bytes, was ' + input.size)
-    if (input.slice(2, 3).equals(BOOL.FALSE)) return false
-    if (input.slice(2, 3).equals(BOOL.TRUE)) return true
+    const d = input.slice(2)
+    if (d.equals(BOOL_FALSE)) return false
+    if (d.equals(BOOL_TRUE)) return true
 
     throw new Error('invalid boolean BFE')
   },
   string(input) {
-    return input.slice(2).toString('utf8')
+    const d = input.slice(2)
+    return d.toString('utf8')
   },
 }
 
@@ -115,15 +114,16 @@ function decode(input) {
         'Buffer is missing first two type&format fields: ' + input
       )
 
-    if (input.equals(NIL_TF)) return null
-    if (input.slice(0, 2).equals(BOOL.TF)) return decoder.bool(input)
-    if (input.slice(0, 2).equals(STRING_TF)) return decoder.string(input)
+    const tf = input.slice(0, 2)
+    if (tf.equals(NIL_TF)) return null
+    if (tf.equals(BOOL_TF)) return decoder.bool(input)
+    if (tf.equals(STRING_TF)) return decoder.string(input)
 
-    const type = TYPES.find((type) => type.code.equals(input.slice(0, 1)))
+    const t = input.slice(0, 1)
+    const type = TYPES.find((type) => type.code.equals(t))
     if (type) {
-      const format = type.formats.find((format) =>
-        format.code.equals(input.slice(1, 2))
-      )
+      const f = input.slice(1, 2)
+      const format = type.formats.find((format) => format.code.equals(f))
       if (format) {
         if (type.sigil || format.suffix)
           return decoder.sigilSuffix(input, type, format)
@@ -155,7 +155,6 @@ function decode(input) {
 module.exports = {
   encode,
   decode,
-  toString: decode, // alias
   bfeTypes: definitions,
   bfeNamedTypes: NAMED_TYPES,
 }
