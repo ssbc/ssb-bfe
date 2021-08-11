@@ -17,6 +17,7 @@ const toTF = (type, format) =>
 
 const STRING_TF = toTF('generic', 'UTF8 string')
 const NIL_TF = toTF('generic', 'nil')
+const BYTES_TF = toTF('generic', 'arbitrary bytes')
 const BOOL_TF = toTF('generic', 'boolean')
 const BOOL_TRUE = Buffer.from([1])
 const BOOL_FALSE = Buffer.from([0])
@@ -39,12 +40,14 @@ const encoder = {
   nil() {
     return NIL_TF // note this type contains no data
   },
+  bytes(input) {
+    return Buffer.concat([BYTES_TF, input])
+  },
 }
 
 function encode(input) {
   /* cases we don't encode */
-  if (input === undefined || Buffer.isBuffer(input) || Number.isInteger(input))
-    return input
+  if (input === undefined || Number.isInteger(input)) return input
 
   if (typeof input === 'string') {
     /* looks for classic sigil/suffix matches */
@@ -60,6 +63,7 @@ function encode(input) {
 
   if (typeof input === 'boolean') return encoder.boolean(input)
   if (input === null) return encoder.nil()
+  if (Buffer.isBuffer(input)) return encoder.bytes(input)
 
   /* recursions */
   if (Array.isArray(input)) {
@@ -101,6 +105,10 @@ const decoder = {
     const d = input.slice(2)
     return d.toString('utf8')
   },
+  bytes(input) {
+    const d = input.slice(2)
+    return d
+  },
 }
 
 function decode(input) {
@@ -118,6 +126,7 @@ function decode(input) {
     if (tf.equals(NIL_TF)) return null
     if (tf.equals(BOOL_TF)) return decoder.bool(input)
     if (tf.equals(STRING_TF)) return decoder.string(input)
+    if (tf.equals(BYTES_TF)) return decoder.bytes(input)
 
     const t = input.slice(0, 1)
     const type = TYPES.find((type) => type.code.equals(t))
