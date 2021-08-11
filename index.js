@@ -23,10 +23,6 @@ const BOOL_TRUE = Buffer.from([1])
 const BOOL_FALSE = Buffer.from([0])
 
 const encoder = {
-  boolean(input) {
-    const d = input ? BOOL_TRUE : BOOL_FALSE
-    return Buffer.concat([BOOL_TF, d])
-  },
   sigilSuffix(input, type, format) {
     let data = input
     if (type.sigil) data = data.slice(1)
@@ -34,12 +30,20 @@ const encoder = {
 
     return Buffer.concat([type.code, format.code, Buffer.from(data, 'base64')])
   },
+
   string(input) {
     return Buffer.concat([STRING_TF, Buffer.from(input, 'utf8')])
   },
+
+  boolean(input) {
+    const d = input ? BOOL_TRUE : BOOL_FALSE
+    return Buffer.concat([BOOL_TF, d])
+  },
+
   nil() {
     return NIL_TF // note this type contains no data
   },
+
   bytes(input) {
     return Buffer.concat([BYTES_TF, input])
   },
@@ -96,6 +100,12 @@ const decoder = {
       ''
     )
   },
+
+  string(input) {
+    const d = input.slice(2)
+    return d.toString('utf8')
+  },
+
   bool(input) {
     if (input.size > 3) {
       throw new Error('Boolean BFE must be 3 bytes, was ' + input.size)
@@ -106,10 +116,7 @@ const decoder = {
 
     throw new Error('Invalid boolean BFE ' + input.toString('hex'))
   },
-  string(input) {
-    const d = input.slice(2)
-    return d.toString('utf8')
-  },
+
   bytes(input) {
     const d = input.slice(2)
     return d
