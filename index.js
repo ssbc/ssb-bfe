@@ -1,284 +1,161 @@
-// Following the TFD spec (also known as TFK), the naming convention in this
+// Following the BFE spec (formally known as TFK), the naming convention in this
 // file uses "T" to mean "Type byte", "TF" to mean "Type byte and Format byte"
 // and "D" to mean "Data bytes".
 
-const { isFeedType, isMsgType, isBlobType } = require('ssb-ref')
-const { definitionsToDict } = require('./util')
-const TYPES = require('./bfe.json')
+const definitions = require('./bfe.json')
+const {
+  decorateBFE,
+  definitionsToDict,
+  findClassicTypeFormat,
+} = require('./util')
 
-const NAMED_TYPES = definitionsToDict(TYPES)
+const TYPES = decorateBFE(definitions)
+const NAMED_TYPES = definitionsToDict(definitions)
 
-const FEED = NAMED_TYPES['feed']
-const FEED_T = Buffer.from([FEED.code])
-const CLASSIC_FEED_TF = Buffer.from([
-  FEED.code,
-  FEED.formats['ssb/classic'].code,
-])
-const GABBYGR_FEED_TF = Buffer.from([
-  FEED.code,
-  FEED.formats['ssb/gabby-grove'].code,
-])
-const BENDYBT_FEED_TF = Buffer.from([
-  FEED.code,
-  FEED.formats['ssb/bendy-butt'].code,
-])
+const toTF = (type, format) =>
+  Buffer.from([NAMED_TYPES[type].code, NAMED_TYPES[type].formats[format].code])
 
-const MSG = NAMED_TYPES['msg']
-const MSG_T = Buffer.from([MSG.code])
-const CLASSIC_MSG_TF = Buffer.from([MSG.code, MSG.formats['ssb/classic'].code])
-const GABBYGR_MSG_TF = Buffer.from([
-  MSG.code,
-  MSG.formats['ssb/gabby-grove'].code,
-])
-const BENDYBT_MSG_TF = Buffer.from([
-  MSG.code,
-  MSG.formats['ssb/bendy-butt'].code,
-])
-
-const BLOB = NAMED_TYPES['blob']
-const BLOB_T = Buffer.from([BLOB.code])
-const CLASSIC_BLOB_TF = Buffer.from([
-  BLOB.code,
-  BLOB.formats['ssb/classic'].code,
-])
-
-const SIGNATURE = NAMED_TYPES['signature']
-const SIGNATURE_T = Buffer.from([SIGNATURE.code])
-const SIGNATURE_TF = Buffer.from([
-  SIGNATURE.code,
-  SIGNATURE.formats['ed25519'].code,
-])
-
-const BOX = NAMED_TYPES['encrypted']
-const BOX_T = Buffer.from([BOX.code])
-const BOX1_TF = Buffer.from([BOX.code, BOX.formats['box1'].code])
-const BOX2_TF = Buffer.from([BOX.code, BOX.formats['box2'].code])
-
-const GENERIC = NAMED_TYPES['generic']
-const STRING_TF = Buffer.from([
-  GENERIC.code,
-  GENERIC.formats['UTF8 string'].code,
-])
-const BOOL_TF = Buffer.from([GENERIC.code, GENERIC.formats['boolean'].code])
-const BOOL_TRUE = Buffer.from([1])
-const BOOL_FALSE = Buffer.from([0])
-const NIL_TF = Buffer.from([GENERIC.code, GENERIC.formats['nil'].code])
-const NIL_TFD = NIL_TF
+const STRING_TF = toTF('generic', 'UTF8 string')
+const NIL_TF = toTF('generic', 'nil')
+const BOOL = {
+  TF: toTF('generic', 'boolean'),
+  TRUE: Buffer.from([1]),
+  FALSE: Buffer.from([0]),
+}
 
 const encoder = {
-  feed(feedId) {
-    let tf
-    if (feedId.endsWith('.ed25519')) tf = CLASSIC_FEED_TF
-    else if (feedId.endsWith('.ggfeed-v1')) tf = GABBYGR_FEED_TF
-    else if (feedId.endsWith('.bbfeed-v1')) tf = BENDYBT_FEED_TF
-    else throw new Error('Unknown feed format: ' + feedId)
-
-    const dotIndex = feedId.lastIndexOf('.')
-    const b64part = feedId.substring(1, dotIndex)
-    const d = Buffer.from(b64part, 'base64')
-
-    return Buffer.concat([tf, d])
+  boolean(input) {
+    const d = input ? BOOL.TRUE : BOOL.FALSE
+    return Buffer.concat([BOOL.TF, d])
   },
+  sigilSuffix(input, type, format) {
+    let data = input
+    if (type.sigil) data = data.slice(1)
+    if (format.suffix) data = data.slice(0, -format.suffix.length)
 
-  message(msgId) {
-    let tf
-    if (msgId.endsWith('.sha256')) tf = CLASSIC_MSG_TF
-    else if (msgId.endsWith('.ggmsg-v1')) tf = GABBYGR_MSG_TF
-    else if (msgId.endsWith('.bbmsg-v1')) tf = BENDYBT_MSG_TF
-    else throw new Error('Unknown msg ID: ' + msgId)
-
-    const dotIndex = msgId.lastIndexOf('.')
-    const b64part = msgId.substring(1, dotIndex)
-    const d = Buffer.from(b64part, 'base64')
-
-    return Buffer.concat([tf, d])
+    return Buffer.concat([type.code, format.code, Buffer.from(data, 'base64')])
   },
-
-  blob(blobId) {
-    let tf
-    if (blobId.endsWith('.sha256')) tf = CLASSIC_BLOB_TF
-    else throw new Error('Unknown blob ID: ' + blobId)
-
-    const dotIndex = blobId.lastIndexOf('.')
-    const b64part = blobId.substring(1, dotIndex)
-    const d = Buffer.from(b64part, 'base64')
-
-    return Buffer.concat([tf, d])
+  string(input) {
+    return Buffer.concat([STRING_TF, Buffer.from(input, 'utf8')])
   },
-
-  box(boxedStr) {
-    if (boxedStr.endsWith('.box')) {
-      const b64part = boxedStr.substring(0, boxedStr.length - '.box'.length)
-      const d = Buffer.from(b64part, 'base64')
-      return Buffer.concat([BOX1_TF, d])
-    } else if (boxedStr.endsWith('.box2')) {
-      const b64part = boxedStr.substring(0, boxedStr.length - '.box2'.length)
-      const d = Buffer.from(b64part, 'base64')
-      return Buffer.concat([BOX2_TF, d])
-    } else throw new Error('Unknown boxed string: ' + boxedStr)
-  },
-
-  signature(sig) {
-    if (!sig.endsWith('.sig.ed25519')) {
-      throw new Error('unknown signature format: ' + sig)
-    }
-    const b64part = sig.substring(0, sig.length - '.sig.ed25519'.length)
-    const d = Buffer.from(b64part, 'base64')
-    return Buffer.concat([SIGNATURE_TF, d])
-  },
-
-  string(str) {
-    const d = Buffer.from(str, 'utf8')
-    return Buffer.concat([STRING_TF, d])
-  },
-
-  boolean(bool) {
-    const d = bool ? BOOL_TRUE : BOOL_FALSE
-    return Buffer.concat([BOOL_TF, d])
+  nil() {
+    return NIL_TF // note this type contains no data
   },
 }
 
 function encode(input) {
+  /* cases we don't encode */
+  if (input === undefined || Buffer.isBuffer(input) || Number.isInteger(input))
+    return input
+
+  if (typeof input === 'string') {
+    /* looks for classic sigil/suffix matches */
+    const { type, format } = findClassicTypeFormat(input, TYPES)
+    if (type) {
+      if (format) return encoder.sigilSuffix(input, type, format)
+      else throw new Error(`Unknown ${type.type} format`)
+    }
+
+    /* fallback */
+    return encoder.string(input)
+  }
+
+  if (typeof input === 'boolean') return encoder.boolean(input)
+  if (input === null) return encoder.nil()
+
+  /* recursions */
   if (Array.isArray(input)) {
     return input.map((x) => {
       const y = encode(x)
-      if (y === undefined) return NIL_TFD
-      else return y
+      return y === undefined ? encoder.nil() : y
     })
   }
-  if (input === undefined) {
-    return undefined
-  } else if (input === null) {
-    return NIL_TFD
-  } else if (typeof input === 'object' && !Buffer.isBuffer(input)) {
+  if (typeof input === 'object') {
+    // we have already checked it's not a Buffer/null/Array
     const output = {}
-    for (let key in input) {
-      const x = input[key]
-      const y = encode(x)
+    for (const key in input) {
+      const y = encode(input[key])
       if (y !== undefined) output[key] = y
     }
     return output
-  } else if (typeof input === 'string') {
-    if (isFeedType(input)) return encoder.feed(input)
-    else if (isMsgType(input)) return encoder.message(input)
-    else if (isBlobType(input)) return encoder.blob(input)
-    else if (input.match(/\.sig\.[a-zA-Z0-9]+$/))
-      return encoder.signature(input)
-    else if (input.match(/\.box\d*$/)) return encoder.box(input)
-    else return encoder.string(input)
-  } else if (typeof input === 'boolean') {
-    return encoder.boolean(input)
-  } else {
-    if (!Number.isInteger(input) && !Buffer.isBuffer(input))
-      console.warn('not encoding unknown value', input)
-    // FIXME: more checks, including floats!
-    return input
   }
+
+  throw new Error('cannot encode input ' + input)
 }
 
 const decoder = {
-  feed(buf) {
-    const tf = buf.slice(0, 2)
-    const d = buf.slice(2)
-
-    let feedExtension
-    if (tf.equals(CLASSIC_FEED_TF)) feedExtension = '.ed25519'
-    else if (tf.equals(GABBYGR_FEED_TF)) feedExtension = '.ggfeed-v1'
-    else if (tf.equals(BENDYBT_FEED_TF)) feedExtension = '.bbfeed-v1'
-    else throw new Error('Unknown feed: ' + buf)
-
-    const b64part = d.toString('base64')
-    return '@' + b64part + feedExtension
+  sigilSuffix(input, type, format) {
+    return [
+      type.sigil || '',
+      input.slice(2).toString('base64'),
+      format.suffix || '',
+    ].join('')
   },
+  bool(input) {
+    if (input.size > 3)
+      throw new Error('boolean BFE must be 3 bytes, was ' + input.size)
+    if (input.slice(2, 3).equals(BOOL.FALSE)) return false
+    if (input.slice(2, 3).equals(BOOL.TRUE)) return true
 
-  message(buf) {
-    const tf = buf.slice(0, 2)
-    const d = buf.slice(2)
-
-    let msgExtension
-    if (tf.equals(CLASSIC_MSG_TF)) msgExtension = '.sha256'
-    else if (tf.equals(GABBYGR_MSG_TF)) msgExtension = '.ggmsg-v1'
-    else if (tf.equals(BENDYBT_MSG_TF)) msgExtension = '.bbmsg-v1'
-    else throw new Error('Unknown msg: ' + buf)
-
-    const b64part = d.toString('base64')
-    return '%' + b64part + msgExtension
+    throw new Error('invalid boolean BFE')
   },
-
-  blob(buf) {
-    const tf = buf.slice(0, 2)
-    const d = buf.slice(2)
-
-    let blobExtension
-    if (tf.equals(CLASSIC_BLOB_TF)) blobExtension = '.sha256'
-    else throw new Error('Unknown blob ID: ' + buf)
-
-    const b64part = d.toString('base64')
-    return '&' + b64part + blobExtension
-  },
-
-  signature(buf) {
-    const d = buf.slice(2)
-    const b64part = d.toString('base64')
-    return b64part + '.sig.ed25519'
-  },
-
-  box(buf) {
-    const tf = buf.slice(0, 2)
-    const d = buf.slice(2)
-    if (tf.equals(BOX1_TF)) return d.toString('base64') + '.box'
-    else if (tf.equals(BOX2_TF)) return d.toString('base64') + '.box2'
-    else throw new Error('Unknown box: ' + buf)
-  },
-
-  string(buf) {
-    const d = buf.slice(2)
-    return d.toString('utf8')
-  },
-
-  boolean(buf) {
-    const d = buf.slice(2)
-    return d.equals(BOOL_TRUE)
+  string(input) {
+    return input.slice(2).toString('utf8')
   },
 }
 
 function decode(input) {
-  if (Array.isArray(input)) {
-    return input.map(decode)
-  } else if (Buffer.isBuffer(input)) {
+  /* cases we don't decode */
+  if (input === null) return null
+  if (Number.isInteger(input)) return input
+
+  if (Buffer.isBuffer(input)) {
     if (input.length < 2)
       throw new Error(
         'Buffer is missing first two type&format fields: ' + input
       )
-    const t = input.slice(0, 1)
-    const tf = input.slice(0, 2)
-    if (tf.equals(STRING_TF)) return decoder.string(input)
-    else if (tf.equals(BOOL_TF)) return decoder.boolean(input)
-    else if (tf.equals(NIL_TF)) return null
-    else if (t.equals(FEED_T)) return decoder.feed(input)
-    else if (t.equals(MSG_T)) return decoder.message(input)
-    else if (t.equals(BLOB_T)) return decoder.blob(input)
-    else if (t.equals(BOX_T)) return decoder.box(input)
-    else if (t.equals(SIGNATURE_T)) {
-      if (tf.equals(SIGNATURE_TF)) return decoder.signature(input)
-      else throw new Error('Unknown signature type')
-    } else if (tf.equals(SIGNATURE_TF)) return decoder.signature(input)
-    else return input
-  } else if (typeof input === 'object' && input !== null) {
+
+    if (input.equals(NIL_TF)) return null
+    if (input.slice(0, 2).equals(BOOL.TF)) return decoder.bool(input)
+    if (input.slice(0, 2).equals(STRING_TF)) return decoder.string(input)
+
+    const type = TYPES.find((type) => type.code.equals(input.slice(0, 1)))
+    if (type) {
+      const format = type.formats.find((format) =>
+        format.code.equals(input.slice(1, 2))
+      )
+      if (format) {
+        if (type.sigil || format.suffix)
+          return decoder.sigilSuffix(input, type, format)
+        else
+          throw new Error(
+            `no decoder defined yet for type: ${type.type}, format: ${format.format}`
+          )
+      } else throw new Error(`Unknown ${type.type} format`)
+    }
+
+    throw new Error('Unknown type/ format')
+  }
+
+  /* recurse */
+  if (Array.isArray(input)) return input.map(decode)
+  if (typeof input === 'object') {
+    // know it's not null, Array
     const output = {}
-    for (let key in input) {
-      const y = input[key]
-      const x = decode(y)
-      output[key] = x
+    for (const key in input) {
+      output[key] = decode(input[key])
     }
     return output
-  } // FIXME: more checks, including floats!
-  else return input
+  }
+
+  // FIXME: more checks, including floats!
+  throw new Error("don't know how to decode: " + input)
 }
 
 module.exports = {
   encode,
   decode,
-  bfeTypes: TYPES,
+  toString: decode, // alias
+  bfeTypes: definitions,
   bfeNamedTypes: NAMED_TYPES,
 }
