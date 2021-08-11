@@ -50,11 +50,15 @@ const encoder = {
 }
 
 function encode(input) {
-  /* cases we don't encode */
-  if (input === undefined || Number.isInteger(input)) return input
+  // cases we don't encode
+  if (input === undefined) {
+    return input
+  } else if (Number.isInteger(input)) {
+    return input
+  }
 
-  if (typeof input === 'string') {
-    /* looks for classic sigil/suffix matches */
+  // strings
+  else if (typeof input === 'string') {
     const { type, format } = findTypeFormatForSigilSuffix(input, TYPES)
     if (type) {
       if (format) return encoder.sigilSuffix(input, type, format)
@@ -64,24 +68,32 @@ function encode(input) {
         )
       }
     }
-
-    /* fallback */
+    // not a sigil-suffix ref
     return encoder.string(input)
   }
 
-  if (typeof input === 'boolean') return encoder.boolean(input)
-  if (input === null) return encoder.nil()
-  if (Buffer.isBuffer(input)) return encoder.bytes(input)
+  // boolean
+  else if (typeof input === 'boolean') {
+    return encoder.boolean(input)
+  }
 
-  /* recursions */
-  if (Array.isArray(input)) {
+  // nil
+  else if (input === null) {
+    return encoder.nil()
+  }
+
+  // bytes
+  else if (Buffer.isBuffer(input)) {
+    return encoder.bytes(input)
+  }
+
+  // recursions
+  else if (Array.isArray(input)) {
     return input.map((x) => {
       const y = encode(x)
       return y === undefined ? encoder.nil() : y
     })
-  }
-  if (typeof input === 'object') {
-    // we have already checked it's not a Buffer/null/Array
+  } else if (typeof input === 'object') {
     const output = {}
     for (const key in input) {
       const y = encode(input[key])
@@ -90,7 +102,10 @@ function encode(input) {
     return output
   }
 
-  throw new Error('No encoder for input ' + input)
+  // unknown
+  else {
+    throw new Error('No encoder for input ' + input)
+  }
 }
 
 const decoder = {
@@ -124,11 +139,15 @@ const decoder = {
 }
 
 function decode(input) {
-  /* cases we don't decode */
-  if (input === null) return null
-  if (Number.isInteger(input)) return input
+  // cases we don't decode
+  if (input === null) {
+    return null
+  } else if (Number.isInteger(input)) {
+    return input
+  }
 
-  if (Buffer.isBuffer(input)) {
+  // most values are buffers
+  else if (Buffer.isBuffer(input)) {
     if (input.length < 2) {
       throw new Error(
         'Cannot decode buffer that is missing type & format fields: ' +
@@ -138,9 +157,9 @@ function decode(input) {
 
     const tf = input.slice(0, 2)
     if (tf.equals(NIL_TF)) return null
-    if (tf.equals(BOOL_TF)) return decoder.bool(input)
-    if (tf.equals(STRING_TF)) return decoder.string(input)
-    if (tf.equals(BYTES_TF)) return decoder.bytes(input)
+    else if (tf.equals(BOOL_TF)) return decoder.bool(input)
+    else if (tf.equals(STRING_TF)) return decoder.string(input)
+    else if (tf.equals(BYTES_TF)) return decoder.bytes(input)
 
     const t = input.slice(0, 1)
     const type = TYPES.find((type) => type.code.equals(t))
@@ -169,10 +188,10 @@ function decode(input) {
     throw new Error('Cannot decode buffer ' + input.toString('hex'))
   }
 
-  /* recurse */
-  if (Array.isArray(input)) return input.map(decode)
-  if (typeof input === 'object') {
-    // know it's not null, Array
+  // recursions
+  else if (Array.isArray(input)) {
+    return input.map(decode)
+  } else if (typeof input === 'object') {
     const output = {}
     for (const key in input) {
       output[key] = decode(input[key])
@@ -181,7 +200,11 @@ function decode(input) {
   }
 
   // FIXME: more checks, including floats!
-  throw new Error('Cannot decode input: ' + input)
+
+  // unknown
+  else {
+    throw new Error('Cannot decode input: ' + input)
+  }
 }
 
 module.exports = {
