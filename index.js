@@ -7,6 +7,8 @@ const {
   decorateBFE,
   definitionsToDict,
   findTypeFormatForSigilSuffix,
+  bufferToURIData,
+  URIDataToBuffer,
 } = require('./util')
 
 const TYPES = decorateBFE(definitions)
@@ -29,6 +31,29 @@ const encoder = {
     if (format.suffix) data = data.slice(0, -format.suffix.length)
 
     return Buffer.concat([type.code, format.code, Buffer.from(data, 'base64')])
+  },
+
+  ssbURI(input) {
+    const [typeName, formatName, data = ''] = new URL(input).pathname.split('/')
+
+    const type = NAMED_TYPES[typeName]
+    if (!type) return encoder.string(input)
+    const format = type.formats[formatName]
+    if (!format) {
+      throw new Error(
+        `No encoder for type=${typeName} format=${formatName} for SSB URI ${input}`
+      )
+    }
+    const d = URIDataToBuffer(data)
+
+    if (format.data_length && d.length !== format.data_length) {
+      throw new Error(
+        `expected data to be length ${format.data_length}, but found ${d.length}`
+      )
+    }
+
+    const tf = Buffer.from([type.code, format.code])
+    return Buffer.concat([tf, d])
   },
 
   string(input) {
@@ -59,6 +84,9 @@ function encode(input) {
 
   // strings
   else if (typeof input === 'string') {
+    if (input.startsWith('ssb:')) return encoder.ssbURI(input)
+
+    /* looks for classic sigil/suffix matches */
     const { type, format } = findTypeFormatForSigilSuffix(input, TYPES)
     if (type) {
       if (format) return encoder.sigilSuffix(input, type, format)
@@ -109,6 +137,10 @@ function encode(input) {
 }
 
 const decoder = {
+  ssbURI(input, type, format) {
+    const d = input.slice(2)
+    return `ssb:${type.type}/${format.format}/${bufferToURIData(d)}`
+  },
   sigilSuffix(input, type, format) {
     const d = input.slice(2)
     return [type.sigil || '', d.toString('base64'), format.suffix || ''].join(
@@ -170,11 +202,7 @@ function decode(input) {
         if (type.sigil || format.suffix) {
           return decoder.sigilSuffix(input, type, format)
         } else {
-          throw new Error(
-            `No decoder for type=${type.type} format=${
-              format.format
-            } for buffer ${input.toString('hex')}`
-          )
+          return decoder.ssbURI(input, type, format)
         }
       } else {
         throw new Error(

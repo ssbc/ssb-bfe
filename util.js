@@ -81,4 +81,10 @@ module.exports = {
   decorateBFE,
   findTypeFormatForSigilSuffix,
   definitionsToDict,
+  bufferToURIData(buf) {
+    return buf.toString('base64').replace(/\+/g, '-').replace(/\//g, '_')
+  },
+  URIDataToBuffer(str) {
+    return Buffer.from(str.replace(/-/g, '+').replace(/_/g, '/'), 'base64')
+  },
 }
