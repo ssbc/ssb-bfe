@@ -1,16 +1,14 @@
 const tape = require('tape')
 const crypto = require('crypto')
 const bfe = require('../')
+const { bufferToURIData } = require('../util')
 
 tape('03 encryption key', function (t) {
   const key = crypto.randomBytes(32)
 
   const values = [
-    'ssb:diffie-hellman/curve25519/' +
-      key.toString('base64').replace(/\+/g, '-').replace(/\//g, '_'),
-    'ssb:diffie-hellman/curve25519/' +
-      key.toString('base64').replace(/\+/g, '-').replace(/\//g, '_') +
-      '?render=thread',
+    'ssb:diffie-hellman/curve25519/' + bufferToURIData(key),
+    'ssb:diffie-hellman/curve25519/' + bufferToURIData(key) + '?render=thread',
   ]
   const valuesLessQueries = values.map((value) => value.replace(/\?.*$/, ''))
   const encoded = bfe.encode(values)

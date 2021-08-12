@@ -3,9 +3,7 @@ const test = require('tape')
 const { bufferToURIData, URIDataToBuffer } = require('../util')
 
 test('util (ssb-uri methods)', (t) => {
-  const uriData = '8LFJ/YVGqcypcXXf0KlHXJsB/0vC9ynu/DxJKX8jlC0='
-    .replace(/\//g, '_')
-    .replace(/\+/g, '-')
+  const uriData = 'g3hPVPDEO1Aj_uPl0-J2NlhFB2bbFLIHlty-YuqFZ3w='
   const buffer = URIDataToBuffer(uriData)
 
   t.deepEqual(
