@@ -34,20 +34,26 @@ const encoder = {
   },
 
   ssbURI(input) {
-    let [type, format, data = ''] = new URL(input).pathname.split('/')
+    const [typeName, formatName, data = ''] = new URL(input).pathname.split('/')
 
-    type = NAMED_TYPES[type]
-    format = type.formats[format]
-    data = URIDataToBuffer(data)
-
-    if (format.data_length && data.length !== format.data_length) {
+    const type = NAMED_TYPES[typeName]
+    if (!type) return encoder.string(input)
+    const format = type.formats[formatName]
+    if (!format) {
       throw new Error(
-        `expected data to be length ${format.data_length}, but found ${data.length}`
+        `No encoder for type=${typeName} format=${formatName} for SSB URI ${input}`
+      )
+    }
+    const d = URIDataToBuffer(data)
+
+    if (format.data_length && d.length !== format.data_length) {
+      throw new Error(
+        `expected data to be length ${format.data_length}, but found ${d.length}`
       )
     }
 
     const tf = Buffer.from([type.code, format.code])
-    return Buffer.concat([tf, data])
+    return Buffer.concat([tf, d])
   },
 
   string(input) {
