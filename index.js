@@ -2,7 +2,7 @@
 // file uses "T" to mean "Type byte", "TF" to mean "Type byte and Format byte"
 // and "D" to mean "Data bytes".
 
-const definitions = require('./bfe.json')
+const definitions = require('ssb-bfe-spec')
 const {
   decorateBFE,
   definitionsToDict,
@@ -17,9 +17,9 @@ const NAMED_TYPES = definitionsToDict(definitions)
 const toTF = (type, format) =>
   Buffer.from([NAMED_TYPES[type].code, NAMED_TYPES[type].formats[format].code])
 
-const STRING_TF = toTF('generic', 'UTF8 string')
+const STRING_TF = toTF('generic', 'string-UTF8')
 const NIL_TF = toTF('generic', 'nil')
-const BYTES_TF = toTF('generic', 'arbitrary bytes')
+const BYTES_TF = toTF('generic', 'any-bytes')
 const BOOL_TF = toTF('generic', 'boolean')
 const BOOL_TRUE = Buffer.from([1])
 const BOOL_FALSE = Buffer.from([0])

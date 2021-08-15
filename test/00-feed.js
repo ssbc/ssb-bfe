@@ -26,7 +26,7 @@ tape('00 feed type', function (t) {
 
   /* MISC function */
   const FEED = bfeNamedTypes['feed'] // eslint-disable-line
-  t.equal(FEED.formats['ssb/classic'].data_length, 32, '32 bytes')
+  t.equal(FEED.formats['classic'].data_length, 32, '32 bytes')
 
   const classicKeyLength = bfeTypes[0].formats[0].data_length
   t.equal(classicKeyLength, 32, '32 bytes')

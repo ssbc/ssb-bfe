@@ -7,8 +7,8 @@ tape('03 encryption key', function (t) {
   const key = crypto.randomBytes(32)
 
   const values = [
-    'ssb:diffie-hellman/curve25519/' + bufferToURIData(key),
-    'ssb:diffie-hellman/curve25519/' + bufferToURIData(key) + '?render=thread',
+    'ssb:encryption-key/box2-dm-dh/' + bufferToURIData(key),
+    'ssb:encryption-key/box2-dm-dh/' + bufferToURIData(key) + '?render=thread',
   ]
   const valuesLessQueries = values.map((value) => value.replace(/\?.*$/, ''))
   const encoded = bfe.encode(values)
