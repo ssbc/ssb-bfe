@@ -19,7 +19,7 @@ function toTF(type, format) {
     throw new Error('toTF() got unknown type: ' + type)
   }
   if (!NAMED_TYPES[type].formats[format]) {
-    throw new Error('toTF() got unknown format: ' + type)
+    throw new Error('toTF() got unknown format: ' + format)
   }
   return Buffer.from([
     NAMED_TYPES[type].code,
