@@ -8,6 +8,17 @@
     "url": "git://github.com/ssb-ngi-pointer/ssb-bfe.git"
   },
   "main": "index.js",
+  "scripts": {
+    "test": "tape test/*.js | tap-bail | tap-spec",
+    "coverage": "nyc --reporter=lcov npm test",
+    "format-code": "prettier --write \"*.js\" \"test/*.js\"",
+    "format-code-staged": "pretty-quick --staged --pattern \"*.js\" --pattern \"test/*.js\""
+  },
+  "dependencies": {
+    "is-canonical-base64": "^1.1.1",
+    "ssb-bfe-spec": "^0.1.1",
+    "ssb-ref": "^2.16.0"
+  },
   "devDependencies": {
     "husky": "^4.3.0",
     "nyc": "^15.1.0",
@@ -16,12 +27,6 @@
     "tap-bail": "^1.0.0",
     "tap-spec": "^5.0.0",
     "tape": "^5.2.2"
-  },
-  "scripts": {
-    "test": "tape test/*.js | tap-bail | tap-spec",
-    "coverage": "nyc --reporter=lcov npm test",
-    "format-code": "prettier --write \"*.js\" \"test/*.js\"",
-    "format-code-staged": "pretty-quick --staged --pattern \"*.js\" --pattern \"test/*.js\""
   },
   "husky": {
     "hooks": {
@@ -33,9 +38,5 @@
     "Andre Staltz <contact@staltz.com>",
     "Mix Irving <mix@protozoa.nz>"
   ],
-  "license": "LGPL-3.0",
-  "dependencies": {
-    "is-canonical-base64": "^1.1.1",
-    "ssb-ref": "^2.16.0"
-  }
+  "license": "LGPL-3.0"
 }
