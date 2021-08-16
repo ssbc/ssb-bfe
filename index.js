@@ -15,6 +15,12 @@ const TYPES = decorateBFE(definitions)
 const NAMED_TYPES = definitionsToDict(definitions)
 
 function toTF(type, format) {
+  if (!NAMED_TYPES[type]) {
+    throw new Error('toTF() got unknown type: ' + type)
+  }
+  if (!NAMED_TYPES[type].formats[format]) {
+    throw new Error('toTF() got unknown format: ' + type)
+  }
   return Buffer.from([
     NAMED_TYPES[type].code,
     NAMED_TYPES[type].formats[format].code,
