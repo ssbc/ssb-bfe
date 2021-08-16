@@ -16,7 +16,7 @@
   },
   "dependencies": {
     "is-canonical-base64": "^1.1.1",
-    "ssb-bfe-spec": "^0.1.1",
+    "ssb-bfe-spec": "github:ssb-ngi-pointer/ssb-bfe-spec#support-ssb-uris",
     "ssb-ref": "^2.16.0"
   },
   "devDependencies": {
