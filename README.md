@@ -32,7 +32,7 @@ same.
 Takes an encoded value (such as the output from `encode`) and returns the
 decoded counterparts as JavaScript primitives.
 
-### bfeTypes()
+### bfeTypes
 
 Returns the `bfe.json` object that can be used to look up information
 based on Type and Field. Example:
@@ -42,7 +42,7 @@ const { bfeTypes } = require('ssb-bfe')
 const classic_key_size = bfeTypes[0][0].data_length
 ```
 
-### bfeNamedTypes()
+### bfeNamedTypes
 
 Returns the `bfe.json` object converted to a map where the keys are
 the type and format names. Example:
@@ -52,6 +52,28 @@ const { bfeNamedTypes } = require('ssb-bfe')
 const FEED = bfeNamedTypes['feed']
 const CLASSIC_FEED_TF = Buffer.from([FEED.code, FEED.formats['ssb/classic'].code])
 ```
+
+### toTF(typeName, formatName)
+
+Sometimes when you're wanting to check what sort of buffer you're handling, you want
+to pivot on the type and format bytes.
+
+```js
+const CLASSIC_MSG_TF = Buffer.from([1, 0])  // << Did I get the right codes?
+
+if (buf.slice(0, 2).equals(CLASSIC_MSG_TF)) {
+  // ...
+}
+```
+
+because remembering those codes is tricky, it's safer to use this convenience method:
+```js
+const CLASSIC_MSG_TF = bfe.toTF('msg', 'classic')
+```
+
+If you remembered the type or format name wrong, you'll instantly get an error!
+
+
 
 [ssb binary field encodings]: https://github.com/ssb-ngi-pointer/ssb-binary-field-encodings-spec
 [TFD]: https://github.com/ssbc/envelope-spec/blob/master/encoding/tfk.md
