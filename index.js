@@ -14,8 +14,12 @@ const {
 const TYPES = decorateBFE(definitions)
 const NAMED_TYPES = definitionsToDict(definitions)
 
-const toTF = (type, format) =>
-  Buffer.from([NAMED_TYPES[type].code, NAMED_TYPES[type].formats[format].code])
+function toTF(type, format) {
+  return Buffer.from([
+    NAMED_TYPES[type].code,
+    NAMED_TYPES[type].formats[format].code,
+  ])
+}
 
 const STRING_TF = toTF('generic', 'UTF8 string')
 const NIL_TF = toTF('generic', 'nil')
@@ -240,4 +244,5 @@ module.exports = {
   decode,
   bfeTypes: definitions,
   bfeNamedTypes: NAMED_TYPES,
+  toTF,
 }
