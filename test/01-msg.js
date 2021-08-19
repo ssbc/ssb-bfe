@@ -4,7 +4,7 @@ const bfe = require('../')
 tape('01 msg type', function (t) {
   const values = [
     '%HZVnEzm0NgoSVfG0Hx4gMFbMMHhFvhJsG2zK/pijYII=.sha256', // classic
-    '%HZVnEzm0NgoSVfG0Hx4gMFbMMHhFvhJsG2zK/pijYII=.bbmsg-v1', // bendy-butt
+    'ssb:message/bendybutt-v1/HZVnEzm0NgoSVfG0Hx4gMFbMMHhFvhJsG2zK_pijYII=', // bendy-butt
   ]
 
   const encoded = bfe.encode(values)

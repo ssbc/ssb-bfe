@@ -37,7 +37,7 @@ const BOOL_FALSE = Buffer.from([0])
 const encoder = {
   sigilSuffix(input, type, format) {
     let data = input
-    if (type.sigil) data = data.slice(1)
+    if (format.sigil) data = data.slice(1)
     if (format.suffix) data = data.slice(0, -format.suffix.length)
 
     return Buffer.concat([type.code, format.code, Buffer.from(data, 'base64')])
@@ -102,7 +102,7 @@ function encode(input) {
       if (format) return encoder.sigilSuffix(input, type, format)
       else {
         throw new Error(
-          `No encoder for type=${type} format=? for string ${input}`
+          `No encoder for type=${type.type} format=? for string ${input}`
         )
       }
     }
@@ -153,7 +153,7 @@ const decoder = {
   },
   sigilSuffix(input, type, format) {
     const d = input.slice(2)
-    return [type.sigil || '', d.toString('base64'), format.suffix || ''].join(
+    return [format.sigil || '', d.toString('base64'), format.suffix || ''].join(
       ''
     )
   },
@@ -209,7 +209,7 @@ function decode(input) {
       const f = input.slice(1, 2)
       const format = type.formats.find((format) => format.code.equals(f))
       if (format) {
-        if (type.sigil || format.suffix) {
+        if (format.sigil || format.suffix) {
           return decoder.sigilSuffix(input, type, format)
         } else {
           return decoder.ssbURI(input, type, format)

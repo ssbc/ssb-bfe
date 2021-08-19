@@ -6,7 +6,7 @@ const { bfeNamedTypes, bfeTypes } = bfe
 tape('00 feed type', function (t) {
   const values = [
     '@6CAxOI3f+LUOVrbAl0IemqiS7ATpQvr9Mdw9LC4+Uv0=.ed25519', // classic
-    '@6CAxOI3f+LUOVrbAl0IemqiS7ATpQvr9Mdw9LC4+Uv0=.bbfeed-v1', // bendy-butt
+    'ssb:feed/bendybutt-v1/6CAxOI3f-LUOVrbAl0IemqiS7ATpQvr9Mdw9LC4-Uv0=', // bendy-butt
   ]
 
   const encoded = bfe.encode(values)

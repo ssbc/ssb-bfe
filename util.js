@@ -9,10 +9,10 @@ const isSigType = (input) => sigTypeRegex.test(input)
 
 function decorateBFE(types) {
   const sigilSuffixRegexp = (type, format) => {
-    if (!type.sigil && !format.suffix) return
+    if (!format.sigil && !format.suffix) return
 
     return IsCanonicalBase64(
-      type.sigil || '',
+      format.sigil || '',
       (format.suffix && format.suffix.replace('.', '\\.')) || '',
       format.key_length
     )
