@@ -25,8 +25,21 @@ tape('00 feed type', function (t) {
       bfe.encode(unknownFeedId)
     },
     { message: 'No encoder for type=feed format=? for string @ZG9n.dog255' },
-    'unknown feedId encode throws'
+    'unknown feedId encode throws (.dog225)'
   )
+
+  const gabbyFeedId = '@6CAxOI3f+LUOVrbAl0IemqiS7ATpQvr9Mdw9LC4+Uv0=.ggfeed-v1'
+  t.throws(
+    () => {
+      bfe.encode(gabbyFeedId)
+    },
+    {
+      message:
+        'No encoder for type=feed format=? for string @6CAxOI3f+LUOVrbAl0IemqiS7ATpQvr9Mdw9LC4+Uv0=.ggfeed-v1',
+    },
+    'unknown feedId encode throws (.ggfeed-v1)'
+  )
+
   t.throws(
     () => bfe.decode(Buffer.from([0, 200, 21])), // type 200 DNE
     'unknown feed type decode throws'
