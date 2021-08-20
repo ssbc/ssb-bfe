@@ -7,12 +7,20 @@ tape('00 feed type', function (t) {
   const values = [
     '@6CAxOI3f+LUOVrbAl0IemqiS7ATpQvr9Mdw9LC4+Uv0=.ed25519', // classic
     'ssb:feed/bendybutt-v1/6CAxOI3f-LUOVrbAl0IemqiS7ATpQvr9Mdw9LC4-Uv0=', // bendy-butt
+    'ssb:feed/gabby-grove/FY5OG311W4j_KPh8H9B2MZt4WSziy_p-ABkKERJdujQ=', // gabby-grove
+    '@6CAxOI3f+LUOVrbAl0IemqiS7ATpQvr9Mdw9LC4+Uv0=.ggfeed-v1', // gabby-grove (sigil)
   ]
 
   const encoded = bfe.encode(values)
 
   t.deepEquals(encoded[0].slice(0, 2), Buffer.from([0, 0]), 'classic feed')
   t.deepEquals(encoded[1].slice(0, 2), Buffer.from([0, 3]), 'bendy feed')
+  t.deepEquals(encoded[2].slice(0, 2), Buffer.from([0, 1]), 'gabby grove')
+  t.deepEquals(
+    encoded[3].slice(0, 2),
+    Buffer.from([0, 1]),
+    'gabby grove (sigil-link)'
+  )
 
   t.deepEquals(bfe.decode(encoded), values, 'decode works')
 
