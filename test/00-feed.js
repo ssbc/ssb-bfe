@@ -7,18 +7,39 @@ tape('00 feed type', function (t) {
   const values = [
     '@6CAxOI3f+LUOVrbAl0IemqiS7ATpQvr9Mdw9LC4+Uv0=.ed25519', // classic
     'ssb:feed/bendybutt-v1/6CAxOI3f-LUOVrbAl0IemqiS7ATpQvr9Mdw9LC4-Uv0=', // bendy-butt
+    'ssb:feed/gabby-grove/FY5OG311W4j_KPh8H9B2MZt4WSziy_p-ABkKERJdujQ=', // gabby-grove
   ]
 
   const encoded = bfe.encode(values)
 
   t.deepEquals(encoded[0].slice(0, 2), Buffer.from([0, 0]), 'classic feed')
   t.deepEquals(encoded[1].slice(0, 2), Buffer.from([0, 3]), 'bendy feed')
+  t.deepEquals(encoded[2].slice(0, 2), Buffer.from([0, 1]), 'gabby grove')
 
   t.deepEquals(bfe.decode(encoded), values, 'decode works')
 
   /* unhappy paths */
   const unknownFeedId = '@' + Buffer.from('dog').toString('base64') + '.dog255'
-  t.throws(() => bfe.encode(unknownFeedId), 'unknown feedId encode throws')
+  t.throws(
+    () => {
+      bfe.encode(unknownFeedId)
+    },
+    { message: 'No encoder for type=feed format=? for string @ZG9n.dog255' },
+    'unknown feedId encode throws (.dog225)'
+  )
+
+  const gabbyFeedId = '@6CAxOI3f+LUOVrbAl0IemqiS7ATpQvr9Mdw9LC4+Uv0=.ggfeed-v1'
+  t.throws(
+    () => {
+      bfe.encode(gabbyFeedId)
+    },
+    {
+      message:
+        'No encoder for type=feed format=? for string @6CAxOI3f+LUOVrbAl0IemqiS7ATpQvr9Mdw9LC4+Uv0=.ggfeed-v1',
+    },
+    'unknown feedId encode throws (.ggfeed-v1)'
+  )
+
   t.throws(
     () => bfe.decode(Buffer.from([0, 200, 21])), // type 200 DNE
     'unknown feed type decode throws'

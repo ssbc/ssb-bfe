@@ -49,8 +49,14 @@ function findTypeFormatForSigilSuffix(input, types) {
   // first regexp match to narrow type
 
   if (type) {
-    format = type.formats.find((format) => format.sigilSuffixRegexp.test(input))
-    // second regexp check to be 100% sure of match
+    try {
+      format = type.formats.find((format) =>
+        format.sigilSuffixRegexp.test(input)
+      )
+      // second regexp check to be 100% sure of match
+    } catch {
+      format = undefined
+    }
 
     return { type, format }
   }
