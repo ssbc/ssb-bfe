@@ -1,12 +1,15 @@
 const tape = require('tape')
 const crypto = require('crypto')
+const SSBURI = require('ssb-uri2')
 const bfe = require('../')
-const { bufferToURIData } = require('../util')
 
 tape('ssb-uri encoding', function (t) {
   /* unhappy paths */
-  const wrongDataLength =
-    'ssb:feed/bamboo/' + bufferToURIData(crypto.randomBytes(13))
+  const wrongDataLength = SSBURI.compose({
+    type: 'feed',
+    format: 'ed25519',
+    data: crypto.randomBytes(13).toString('base64'),
+  })
   t.throws(() => bfe.encode(wrongDataLength), 'incorrect data length')
 
   const bfelessURI =
@@ -17,9 +20,6 @@ tape('ssb-uri encoding', function (t) {
     Buffer.from([6, 0]),
     'unknown URIs get encoded as BFE strings'
   )
-
-  const weirdURI = 'ssb:feed/joke/invalidCanonicalSSBURI'
-  t.throws(() => bfe.encode(weirdURI), 'SSB URI with unknown format throws')
 
   t.end()
 })

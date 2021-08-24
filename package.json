@@ -20,7 +20,8 @@
   "dependencies": {
     "is-canonical-base64": "^1.1.1",
     "ssb-bfe-spec": "~0.2.0",
-    "ssb-ref": "^2.16.0"
+    "ssb-ref": "^2.16.0",
+    "ssb-uri2": "^1.3.0"
   },
   "devDependencies": {
     "husky": "^4.3.0",

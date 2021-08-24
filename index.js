@@ -3,12 +3,12 @@
 // and "D" to mean "Data bytes".
 
 const definitions = require('ssb-bfe-spec')
+const SSBURI = require('ssb-uri2')
+const { isSSBURI, isExperimentalSSBURI, isAddressSSBURI } = SSBURI
 const {
   decorateBFE,
   definitionsToDict,
   findTypeFormatForSigilSuffix,
-  bufferToURIData,
-  URIDataToBuffer,
 } = require('./util')
 
 const TYPES = decorateBFE(definitions)
@@ -44,7 +44,12 @@ const encoder = {
   },
 
   ssbURI(input) {
-    const [typeName, formatName, data = ''] = new URL(input).pathname.split('/')
+    // These URIs do not have BFE counterparts, so treat them as strings:
+    if (isAddressSSBURI(input) || isExperimentalSSBURI(input)) {
+      return encoder.string(input)
+    }
+
+    const { type: typeName, format: formatName, data } = SSBURI.decompose(input)
 
     const type = NAMED_TYPES[typeName]
     if (!type) return encoder.string(input)
@@ -54,7 +59,7 @@ const encoder = {
         `No encoder for type=${typeName} format=${formatName} for SSB URI ${input}`
       )
     }
-    const d = URIDataToBuffer(data)
+    const d = Buffer.from(data, 'base64')
 
     if (format.data_length && d.length !== format.data_length) {
       throw new Error(
@@ -94,7 +99,9 @@ function encode(input) {
 
   // strings
   else if (typeof input === 'string') {
-    if (input.startsWith('ssb:')) return encoder.ssbURI(input)
+    if (isSSBURI(input)) {
+      return encoder.ssbURI(input)
+    }
 
     /* looks for classic sigil/suffix matches */
     const { type, format } = findTypeFormatForSigilSuffix(input, TYPES)
@@ -149,7 +156,8 @@ function encode(input) {
 const decoder = {
   ssbURI(input, type, format) {
     const d = input.slice(2)
-    return `ssb:${type.type}/${format.format}/${bufferToURIData(d)}`
+    const data = d.toString('base64')
+    return SSBURI.compose({ type: type.type, format: format.format, data })
   },
   sigilSuffix(input, type, format) {
     const d = input.slice(2)
