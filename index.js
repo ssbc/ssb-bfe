@@ -99,7 +99,7 @@ function encode(input) {
 
   // strings
   else if (typeof input === 'string') {
-    if (isSSBURI(input)) return encoder.ssbURI(input)
+    if (input.startsWith('ssb:')) return encoder.ssbURI(input)
 
     /* looks for classic sigil/suffix matches */
     const { type, format } = findTypeFormatForSigilSuffix(input, TYPES)

@@ -21,5 +21,8 @@ tape('ssb-uri encoding', function (t) {
     'unknown URIs get encoded as BFE strings'
   )
 
+  const weirdURI = 'ssb:feed/joke/invalidCanonicalSSBURI'
+  t.throws(() => bfe.encode(weirdURI), 'SSB URI with unknown format throws')
+
   t.end()
 })
