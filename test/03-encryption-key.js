@@ -1,15 +1,17 @@
 const tape = require('tape')
 const crypto = require('crypto')
+const SSBURI = require('ssb-uri2')
 const bfe = require('../')
-const { bufferToURIData } = require('../util')
 
 tape('03 encryption key', function (t) {
   const key = crypto.randomBytes(32)
 
-  const values = [
-    'ssb:encryption-key/box2-dm-dh/' + bufferToURIData(key),
-    'ssb:encryption-key/box2-dm-dh/' + bufferToURIData(key) + '?render=thread',
-  ]
+  const exampleUri = SSBURI.compose({
+    type: 'encryption-key',
+    format: 'box2-dm-dh',
+    data: key.toString('base64'),
+  })
+  const values = [exampleUri, exampleUri + '?render=thread']
   const valuesLessQueries = values.map((value) => value.replace(/\?.*$/, ''))
   const encoded = bfe.encode(values)
 
