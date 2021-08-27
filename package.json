@@ -19,9 +19,9 @@
   },
   "dependencies": {
     "is-canonical-base64": "^1.1.1",
-    "ssb-bfe-spec": "~0.2.0",
+    "ssb-bfe-spec": "~0.3.0",
     "ssb-ref": "^2.16.0",
-    "ssb-uri2": "^1.4.1"
+    "ssb-uri2": "^1.5.1"
   },
   "devDependencies": {
     "husky": "^4.3.0",
