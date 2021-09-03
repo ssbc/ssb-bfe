@@ -50,7 +50,7 @@ the type and format names. Example:
 ```
 const { bfeNamedTypes } = require('ssb-bfe')
 const FEED = bfeNamedTypes['feed']
-const CLASSIC_FEED_TF = Buffer.from([FEED.code, FEED.formats['ssb/classic'].code])
+const CLASSIC_FEED_TF = Buffer.from([FEED.code, FEED.formats['classic'].code])
 ```
 
 ### toTF(typeName, formatName)
