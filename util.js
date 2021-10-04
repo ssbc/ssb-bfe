@@ -14,9 +14,9 @@ function decorateBFE(types) {
     return IsCanonicalBase64(
       format.sigil || '',
       (format.suffix && format.suffix.replace('.', '\\.')) || '',
-      format.key_length
+      format.data_length
     )
-    // NOTE this assumes all sigil / suffic encodings are base64
+    // NOTE this assumes all sigil / suffix encodings are base64
   }
 
   return types.map((type) => {
