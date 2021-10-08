@@ -1,3 +1,9 @@
+<!--
+SPDX-FileCopyrightText: 2021 Anders Rune Jensen
+
+SPDX-License-Identifier: CC0-1.0
+-->
+
 # SSB BFE
 
 Javascript implementation of the [SSB binary field encodings] spec.

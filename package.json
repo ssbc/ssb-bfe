@@ -9,7 +9,9 @@
   },
   "main": "index.js",
   "files": [
-    "*.js"
+    "*.js",
+    "package.json.license",
+    "LICENSES/*"
   ],
   "scripts": {
     "test": "tape test/*.js | tap-bail | tap-spec",

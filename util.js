@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2021 Anders Rune Jensen
+//
+// SPDX-License-Identifier: LGPL-3.0-only
+
 const IsCanonicalBase64 = require('is-canonical-base64')
 const { isFeedType, isMsgType, isBlobType } = require('ssb-ref')
 

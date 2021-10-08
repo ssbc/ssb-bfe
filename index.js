@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2021 Anders Rune Jensen
+//
+// SPDX-License-Identifier: LGPL-3.0-only
+
 // Following the BFE spec (formerly known as TFK), the naming convention in this
 // file uses "T" to mean "Type byte", "TF" to mean "Type byte and Format byte"
 // and "D" to mean "Data bytes".
