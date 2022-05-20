@@ -2,10 +2,10 @@
   "name": "ssb-bfe",
   "description": "Binary Field Encodings (BFE) for Secure Scuttlebutt (SSB)",
   "version": "3.2.0",
-  "homepage": "https://github.com/ssb-ngi-pointer/ssb-bfe",
+  "homepage": "https://github.com/ssbc/ssb-bfe",
   "repository": {
     "type": "git",
-    "url": "git://github.com/ssb-ngi-pointer/ssb-bfe.git"
+    "url": "git://github.com/ssbc/ssb-bfe.git"
   },
   "main": "index.js",
   "files": [
