@@ -8,7 +8,7 @@
 
 const definitions = require('ssb-bfe-spec')
 const SSBURI = require('ssb-uri2')
-const { isSSBURI, isExperimentalSSBURI, isAddressSSBURI } = SSBURI
+const { isExperimentalSSBURI, isAddressSSBURI } = SSBURI
 const {
   decorateBFE,
   definitionsToDict,
@@ -37,6 +37,43 @@ const BYTES_TF = toTF('generic', 'any-bytes')
 const BOOL_TF = toTF('generic', 'boolean')
 const BOOL_TRUE = Buffer.from([1])
 const BOOL_FALSE = Buffer.from([0])
+
+const isEncodedFnMaker = (type, format) => (input) => {
+  const tf = toTF(type, format)
+  const formatDetails = NAMED_TYPES[type].formats[format]
+  return (
+    Buffer.isBuffer(input) &&
+    input.slice(0, 2).equals(tf) &&
+    (!formatDetails.data_length ||
+      input.length - 2 === formatDetails.data_length)
+  )
+}
+
+function capitalCamelCase(str) {
+  const camel = str.replace(/[-_](\w)/g, (m, c) => c.toUpperCase())
+  return camel.charAt(0).toUpperCase() + camel.slice(1)
+}
+
+const isEncodedFns = {}
+for (const type of TYPES) {
+  const typeName = capitalCamelCase(type.type)
+  for (const format of type.formats) {
+    const formatName = capitalCamelCase(format.format)
+    isEncodedFns[`isEncoded${typeName}${formatName}`] = isEncodedFnMaker(
+      type.type,
+      format.format
+    )
+  }
+  isEncodedFns[`isEncoded${typeName}`] = (input) => {
+    for (const format of type.formats) {
+      const formatName = capitalCamelCase(format.format)
+      if (isEncodedFns[`isEncoded${typeName}${formatName}`](input)) {
+        return true
+      }
+    }
+    return false
+  }
+}
 
 const encoder = {
   sigilSuffix(input, type, format) {
@@ -261,4 +298,5 @@ module.exports = {
   bfeTypes: definitions,
   bfeNamedTypes: NAMED_TYPES,
   toTF,
+  ...isEncodedFns,
 }
