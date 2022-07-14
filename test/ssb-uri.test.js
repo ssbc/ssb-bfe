@@ -11,7 +11,7 @@ tape('ssb-uri encoding', function (t) {
   /* unhappy paths */
   const wrongDataLength = SSBURI.compose({
     type: 'feed',
-    format: 'ed25519',
+    format: 'classic',
     data: crypto.randomBytes(13).toString('base64'),
   })
   t.throws(() => bfe.encode(wrongDataLength), 'incorrect data length')
