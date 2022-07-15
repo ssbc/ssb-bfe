@@ -9,19 +9,39 @@ const { bfeNamedTypes, bfeTypes } = bfe
 
 tape('00 feed type', function (t) {
   const values = [
-    '@6CAxOI3f+LUOVrbAl0IemqiS7ATpQvr9Mdw9LC4+Uv0=.ed25519', // classic
-    'ssb:feed/bendybutt-v1/6CAxOI3f-LUOVrbAl0IemqiS7ATpQvr9Mdw9LC4-Uv0=', // bendy-butt
+    '@FY5OG311W4j/KPh8H9B2MZt4WSziy/p+ABkKERJdujQ=.ed25519', // classic
+    'ssb:feed/classic/FY5OG311W4j_KPh8H9B2MZt4WSziy_p-ABkKERJdujQ=', // classic URI form
+    'ssb:feed/ed25519/FY5OG311W4j_KPh8H9B2MZt4WSziy_p-ABkKERJdujQ=', // classic URI form (deprecated)
     'ssb:feed/gabbygrove-v1/FY5OG311W4j_KPh8H9B2MZt4WSziy_p-ABkKERJdujQ=', // gabby-grove
+    // bamboo
+    'ssb:feed/bendybutt-v1/6CAxOI3f-LUOVrbAl0IemqiS7ATpQvr9Mdw9LC4-Uv0=', // bendy-butt
     'ssb:feed/buttwoo-v1/FY5OG311W4j_KPh8H9B2MZt4WSziy_p-ABkKERJdujQ=', // butt2
   ]
 
   const encoded = bfe.encode(values)
 
-  t.deepEquals(encoded[0].slice(0, 2), Buffer.from([0, 0]), 'classic feed')
-  t.deepEquals(encoded[1].slice(0, 2), Buffer.from([0, 3]), 'bendy feed')
-  t.deepEquals(encoded[2].slice(0, 2), Buffer.from([0, 1]), 'gabby grove feed')
-  t.deepEquals(encoded[3].slice(0, 2), Buffer.from([0, 4]), 'buttwoo feed')
+  t.deepEquals(
+    encoded[0].slice(0, 2),
+    Buffer.from([0, 0]),
+    'classic feed (sigil)'
+  )
+  t.deepEquals(
+    encoded[1].slice(0, 2),
+    Buffer.from([0, 0]),
+    'classic feed (uri)'
+  )
+  t.deepEquals(
+    encoded[2].slice(0, 2),
+    Buffer.from([0, 0]),
+    'classic feed (uri, deprecated)'
+  )
+  t.deepEquals(encoded[3].slice(0, 2), Buffer.from([0, 1]), 'gabby grove feed')
+  t.deepEquals(encoded[4].slice(0, 2), Buffer.from([0, 3]), 'bendy feed')
+  t.deepEquals(encoded[5].slice(0, 2), Buffer.from([0, 4]), 'buttwoo feed')
 
+  const expectedDecodedValues = values
+  expectedDecodedValues[1] = values[0] // "classic" format decodes => sigil form
+  expectedDecodedValues[2] = values[0] // "classic" format decodes => sigil form
   t.deepEquals(bfe.decode(encoded), values, 'decode works')
 
   /* unhappy paths */
