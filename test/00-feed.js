@@ -44,6 +44,17 @@ tape('00 feed type', function (t) {
   expectedDecodedValues[2] = values[0] // "classic" format decodes => sigil form
   t.deepEquals(bfe.decode(encoded), values, 'decode works')
 
+  t.deepEquals(
+    bfe.decodeTypeFormat(encoded[0], 'feed', 'classic'),
+    values[0],
+    'decode classic works'
+  )
+  t.deepEquals(
+    bfe.decodeTypeFormat(encoded[4], 'feed', 'bendybutt-v1'),
+    values[4],
+    'decode bendy butt works'
+  )
+
   /* unhappy paths */
   const unknownFeedId = '@' + Buffer.from('dog').toString('base64') + '.dog255'
   t.throws(

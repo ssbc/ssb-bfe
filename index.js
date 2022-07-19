@@ -292,9 +292,22 @@ function decode(input) {
   }
 }
 
+function decodeTypeFormat(input, typeName, formatName) {
+  const tf = input.slice(0, 2)
+  if (tf.equals(NIL_TF)) return null
+
+  const type = NAMED_TYPES[typeName]
+  const format = NAMED_TYPES[typeName].formats[formatName]
+
+  if (format.sigil || format.suffix)
+    return decoder.sigilSuffix(input, type, format)
+  else return decoder.ssbURI(input, type, format)
+}
+
 module.exports = {
   encode,
   decode,
+  decodeTypeFormat,
   bfeTypes: definitions,
   bfeNamedTypes: NAMED_TYPES,
   toTF,
