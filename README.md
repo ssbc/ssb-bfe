@@ -38,6 +38,12 @@ same.
 Takes an encoded value (such as the output from `encode`) and returns the
 decoded counterparts as JavaScript primitives.
 
+### `decodeTypeFormat(input, typeName, formatName)`
+
+Takes an encoded value (such as the output from `encode`), a typeName
+and formatName and returns the decoded counterparts as JavaScript
+primitives. This is much faster than decode if you know the type.
+
 ### `bfeTypes`
 
 Returns the `bfe.json` object that can be used to look up information
