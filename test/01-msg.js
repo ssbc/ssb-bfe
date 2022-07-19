@@ -22,6 +22,17 @@ tape('01 msg type', function (t) {
 
   t.deepEquals(bfe.decode(encoded), values, 'decode works')
 
+  t.deepEquals(
+    bfe.decodeTypeFormat(encoded[0], 'message', 'classic'),
+    values[0],
+    'decode classic works'
+  )
+  t.deepEquals(
+    bfe.decodeTypeFormat(encoded[1], 'message', 'bendybutt-v1'),
+    values[1],
+    'decode bendy butt works'
+  )
+
   /* unhappy paths */
   const unknownMsgId = '%' + Buffer.from('dog').toString('base64') + '.dog255'
   t.throws(() => bfe.encode(unknownMsgId), 'unknown msgId encode throws')
