@@ -293,6 +293,9 @@ function decode(input) {
 }
 
 function decodeTypeFormat(input, typeName, formatName) {
+  const tf = input.slice(0, 2)
+  if (tf.equals(NIL_TF)) return null
+
   const type = NAMED_TYPES[typeName]
   const format = NAMED_TYPES[typeName].formats[formatName]
 
