@@ -21,7 +21,7 @@
   },
   "dependencies": {
     "is-canonical-base64": "^1.1.1",
-    "ssb-bfe-spec": "ssbc/ssb-bfe-spec#indexed-v1",
+    "ssb-bfe-spec": "~0.7.0",
     "ssb-ref": "^2.16.0",
     "ssb-uri2": "ssbc/ssb-uri2#indexed2"
   },
