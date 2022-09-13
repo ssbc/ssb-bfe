@@ -11,6 +11,7 @@ tape('01 msg type', function (t) {
     'ssb:message/bendybutt-v1/HZVnEzm0NgoSVfG0Hx4gMFbMMHhFvhJsG2zK_pijYII=', // bendy-butt
     'ssb:message/gabbygrove-v1/QibgMEFVrupoOpiILKVoNXnhzdVQVZf7dkmL9MSXO5g=', // gabby-grove
     'ssb:message/buttwoo-v1/QibgMEFVrupoOpiILKVoNXnhzdVQVZf7dkmL9MSXO5g=', // butt2
+    'ssb:message/indexed-v1/QibgMEFVrupoOpiILKVoNXnhzdVQVZf7dkmL9MSXO5g=', // indexed-v1
   ]
 
   const encoded = bfe.encode(values)
@@ -19,6 +20,7 @@ tape('01 msg type', function (t) {
   t.deepEquals(encoded[1].slice(0, 2), Buffer.from([1, 4]), 'bendy butt msg')
   t.deepEquals(encoded[2].slice(0, 2), Buffer.from([1, 1]), 'gabby grove msg')
   t.deepEquals(encoded[3].slice(0, 2), Buffer.from([1, 5]), 'buttwoo msg')
+  t.deepEquals(encoded[4].slice(0, 2), Buffer.from([1, 6]), 'index msg')
 
   t.deepEquals(bfe.decode(encoded), values, 'decode works')
 
