@@ -6,36 +6,46 @@ const tape = require('tape')
 const bfe = require('../')
 
 tape('enumerate all is*() helpers', function (t) {
-  t.equals(typeof bfe.isEncodedFeed, 'function')
-  t.equals(typeof bfe.isEncodedFeedClassic, 'function')
-  t.equals(typeof bfe.isEncodedFeedGabbygroveV1, 'function')
-  t.equals(typeof bfe.isEncodedFeedBamboo, 'function')
-  t.equals(typeof bfe.isEncodedFeedBendybuttV1, 'function')
-  t.equals(typeof bfe.isEncodedFeedButtwooV1, 'function')
-  t.equals(typeof bfe.isEncodedMessage, 'function')
-  t.equals(typeof bfe.isEncodedMessageClassic, 'function')
-  t.equals(typeof bfe.isEncodedMessageGabbygroveV1, 'function')
-  t.equals(typeof bfe.isEncodedMessageCloaked, 'function')
-  t.equals(typeof bfe.isEncodedMessageBamboo, 'function')
-  t.equals(typeof bfe.isEncodedMessageBendybuttV1, 'function')
-  t.equals(typeof bfe.isEncodedMessageButtwooV1, 'function')
-  t.equals(typeof bfe.isEncodedBlob, 'function')
-  t.equals(typeof bfe.isEncodedBlobClassic, 'function')
-  t.equals(typeof bfe.isEncodedEncryptionKey, 'function')
-  t.equals(typeof bfe.isEncodedEncryptionKeyBox2DmDh, 'function')
-  t.equals(typeof bfe.isEncodedEncryptionKeyBox2PoboxDh, 'function')
-  t.equals(typeof bfe.isEncodedSignature, 'function')
-  t.equals(typeof bfe.isEncodedSignatureMsgEd25519, 'function')
-  t.equals(typeof bfe.isEncodedEncrypted, 'function')
-  t.equals(typeof bfe.isEncodedEncryptedBox1, 'function')
-  t.equals(typeof bfe.isEncodedEncryptedBox2, 'function')
-  t.equals(typeof bfe.isEncodedGeneric, 'function')
-  t.equals(typeof bfe.isEncodedGenericStringUTF8, 'function')
-  t.equals(typeof bfe.isEncodedGenericBoolean, 'function')
-  t.equals(typeof bfe.isEncodedGenericNil, 'function')
-  t.equals(typeof bfe.isEncodedGenericAnyBytes, 'function')
-  t.equals(typeof bfe.isEncodedIdentity, 'function')
-  t.equals(typeof bfe.isEncodedIdentityPoBox, 'function')
+  const allFunctions = Object.keys(bfe).filter((key) =>
+    key.startsWith('isEncoded')
+  )
+  t.deepEquals(allFunctions, [
+    'isEncodedFeedClassic',
+    'isEncodedFeedGabbygroveV1',
+    'isEncodedFeedBamboo',
+    'isEncodedFeedBendybuttV1',
+    'isEncodedFeedButtwooV1',
+    'isEncodedFeedIndexedV1',
+    'isEncodedFeed',
+    'isEncodedMessageClassic',
+    'isEncodedMessageGabbygroveV1',
+    'isEncodedMessageCloaked',
+    'isEncodedMessageBamboo',
+    'isEncodedMessageBendybuttV1',
+    'isEncodedMessageButtwooV1',
+    'isEncodedMessageIndexedV1',
+    'isEncodedMessage',
+    'isEncodedBlobClassic',
+    'isEncodedBlob',
+    'isEncodedEncryptionKeyBox2DmDh',
+    'isEncodedEncryptionKeyBox2PoboxDh',
+    'isEncodedEncryptionKey',
+    'isEncodedSignatureMsgEd25519',
+    'isEncodedSignature',
+    'isEncodedEncryptedBox1',
+    'isEncodedEncryptedBox2',
+    'isEncodedEncrypted',
+    'isEncodedGenericStringUTF8',
+    'isEncodedGenericBoolean',
+    'isEncodedGenericNil',
+    'isEncodedGenericAnyBytes',
+    'isEncodedGeneric',
+    'isEncodedIdentityPoBox',
+    'isEncodedIdentity',
+  ])
+  for (const fnName of allFunctions) {
+    t.equals(typeof bfe[fnName], 'function')
+  }
   t.end()
 })
 
@@ -70,6 +80,14 @@ tape('isEncodedFeed*() happy cases', function (t) {
     ),
     'isEncodedFeed buttwoo-v1'
   )
+  t.true(
+    bfe.isEncodedFeed(
+      bfe.encode(
+        'ssb:feed/indexed-v1/FY5OG311W4j_KPh8H9B2MZt4WSziy_p-ABkKERJdujQ='
+      )
+    ),
+    'isEncodedFeed indexed-v1'
+  )
 
   t.true(
     bfe.isEncodedFeedClassic(
@@ -100,6 +118,14 @@ tape('isEncodedFeed*() happy cases', function (t) {
       )
     ),
     'isEncodedFeedButtwooV1'
+  )
+  t.true(
+    bfe.isEncodedFeedIndexedV1(
+      bfe.encode(
+        'ssb:feed/indexed-v1/FY5OG311W4j_KPh8H9B2MZt4WSziy_p-ABkKERJdujQ='
+      )
+    ),
+    'isEncodedFeedIndexedV1'
   )
 
   t.end()
@@ -181,6 +207,14 @@ tape('isEncodedMessage*() happy cases', function (t) {
     ),
     'isEncodedMessage buttwoo-v1'
   )
+  t.true(
+    bfe.isEncodedMessage(
+      bfe.encode(
+        'ssb:message/indexed-v1/FY5OG311W4j_KPh8H9B2MZt4WSziy_p-ABkKERJdujQ='
+      )
+    ),
+    'isEncodedMessage indexed-v1'
+  )
 
   t.true(
     bfe.isEncodedMessageClassic(
@@ -211,6 +245,14 @@ tape('isEncodedMessage*() happy cases', function (t) {
       )
     ),
     'isEncodedMessageButtwooV1'
+  )
+  t.true(
+    bfe.isEncodedMessageIndexedV1(
+      bfe.encode(
+        'ssb:message/indexed-v1/FY5OG311W4j_KPh8H9B2MZt4WSziy_p-ABkKERJdujQ='
+      )
+    ),
+    'isEncodedMessageIndexedV1'
   )
 
   t.end()

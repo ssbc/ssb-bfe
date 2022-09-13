@@ -16,6 +16,7 @@ tape('00 feed type', function (t) {
     // bamboo
     'ssb:feed/bendybutt-v1/6CAxOI3f-LUOVrbAl0IemqiS7ATpQvr9Mdw9LC4-Uv0=', // bendy-butt
     'ssb:feed/buttwoo-v1/FY5OG311W4j_KPh8H9B2MZt4WSziy_p-ABkKERJdujQ=', // butt2
+    'ssb:feed/indexed-v1/FY5OG311W4j_KPh8H9B2MZt4WSziy_p-ABkKERJdujQ=', // indexed-v1
   ]
 
   const encoded = bfe.encode(values)
@@ -38,6 +39,7 @@ tape('00 feed type', function (t) {
   t.deepEquals(encoded[3].slice(0, 2), Buffer.from([0, 1]), 'gabby grove feed')
   t.deepEquals(encoded[4].slice(0, 2), Buffer.from([0, 3]), 'bendy feed')
   t.deepEquals(encoded[5].slice(0, 2), Buffer.from([0, 4]), 'buttwoo feed')
+  t.deepEquals(encoded[6].slice(0, 2), Buffer.from([0, 5]), 'index feed')
 
   const expectedDecodedValues = values
   expectedDecodedValues[1] = values[0] // "classic" format decodes => sigil form
