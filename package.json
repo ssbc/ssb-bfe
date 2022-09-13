@@ -23,7 +23,7 @@
     "is-canonical-base64": "^1.1.1",
     "ssb-bfe-spec": "~0.7.0",
     "ssb-ref": "^2.16.0",
-    "ssb-uri2": "ssbc/ssb-uri2#indexed2"
+    "ssb-uri2": "^2.1.0"
   },
   "devDependencies": {
     "husky": "^4.3.0",
