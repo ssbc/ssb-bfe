@@ -8,8 +8,9 @@ const bfe = require('../')
 tape('01 msg type', function (t) {
   const values = [
     '%HZVnEzm0NgoSVfG0Hx4gMFbMMHhFvhJsG2zK/pijYII=.sha256', // classic
-    'ssb:message/bendybutt-v1/HZVnEzm0NgoSVfG0Hx4gMFbMMHhFvhJsG2zK_pijYII=', // bendy-butt
     'ssb:message/gabbygrove-v1/QibgMEFVrupoOpiILKVoNXnhzdVQVZf7dkmL9MSXO5g=', // gabby-grove
+    '%HZVnEzm0NgoSVfG0Hx4gMFbMMHhFvhJsG2zK/pijYII=.cloaked', // cloaked
+    'ssb:message/bendybutt-v1/HZVnEzm0NgoSVfG0Hx4gMFbMMHhFvhJsG2zK_pijYII=', // bendy-butt
     'ssb:message/buttwoo-v1/QibgMEFVrupoOpiILKVoNXnhzdVQVZf7dkmL9MSXO5g=', // butt2
     'ssb:message/indexed-v1/QibgMEFVrupoOpiILKVoNXnhzdVQVZf7dkmL9MSXO5g=', // indexed-v1
   ]
@@ -17,10 +18,11 @@ tape('01 msg type', function (t) {
   const encoded = bfe.encode(values)
 
   t.deepEquals(encoded[0].slice(0, 2), Buffer.from([1, 0]), 'classic msg')
-  t.deepEquals(encoded[1].slice(0, 2), Buffer.from([1, 4]), 'bendy butt msg')
-  t.deepEquals(encoded[2].slice(0, 2), Buffer.from([1, 1]), 'gabby grove msg')
-  t.deepEquals(encoded[3].slice(0, 2), Buffer.from([1, 5]), 'buttwoo msg')
-  t.deepEquals(encoded[4].slice(0, 2), Buffer.from([1, 6]), 'index msg')
+  t.deepEquals(encoded[1].slice(0, 2), Buffer.from([1, 1]), 'gabby grove msg')
+  t.deepEquals(encoded[2].slice(0, 2), Buffer.from([1, 2]), 'cloaked msg')
+  t.deepEquals(encoded[3].slice(0, 2), Buffer.from([1, 4]), 'bendy butt msg')
+  t.deepEquals(encoded[4].slice(0, 2), Buffer.from([1, 5]), 'buttwoo msg')
+  t.deepEquals(encoded[5].slice(0, 2), Buffer.from([1, 6]), 'index msg')
 
   t.deepEquals(bfe.decode(encoded), values, 'decode works')
 
@@ -30,8 +32,8 @@ tape('01 msg type', function (t) {
     'decode classic works'
   )
   t.deepEquals(
-    bfe.decodeTypeFormat(encoded[1], 'message', 'bendybutt-v1'),
-    values[1],
+    bfe.decodeTypeFormat(encoded[3], 'message', 'bendybutt-v1'),
+    values[3],
     'decode bendy butt works'
   )
 
