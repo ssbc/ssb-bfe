@@ -41,6 +41,7 @@ tape('enumerate all is*() helpers', function (t) {
     'isEncodedGenericAnyBytes',
     'isEncodedGeneric',
     'isEncodedIdentityPoBox',
+    'isEncodedIdentityGroup',
     'isEncodedIdentity',
   ])
   for (const fnName of allFunctions) {
